@@ -5,462 +5,72 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>StudyForge — AI Tutor</title>
 <style>
-:root {
-  --gold:#F5A623; --gold-dark:#D4891A; --gold-light:#FFF3DC;
-  --blue:#2563EB; --blue-dark:#1D4ED8; --green:#16A34A;
-  --bg:#FFFFFF; --bg2:#F8FAFC; --bg3:#F1F5F9;
-  --text:#0F172A; --text2:#475569; --text3:#94A3B8;
-  --border:#E2E8F0; --radius:12px; --radius-sm:8px;
-  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dvh;overflow:hidden}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg)}
-.topbar h1{font-size:18px;font-weight:800}
-.topbar h1 span{color:var(--gold)}
-.topbar-actions{display:flex;gap:6px;align-items:center}
-.icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.icon-btn:hover{background:var(--bg2);border-color:var(--text3)}
-.mode-bar{display:flex;gap:6px;padding:8px 16px;overflow-x:auto;border-bottom:1px solid var(--border)}
-.mode-chip{padding:6px 14px;border-radius:99px;border:1px solid var(--border);cursor:pointer;font-size:12px;font-weight:500;background:var(--bg);white-space:nowrap;transition:all .15s}
-.mode-chip.active{background:var(--gold);color:#fff;border-color:var(--gold)}
-.chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-.chat-msg{max-width:88%;padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.5;animation:fadeIn .3s;word-wrap:break-word}
-.chat-msg.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:6px}
-.chat-msg.ai{align-self:flex-start;background:var(--bg2);border:1px solid var(--border);border-bottom-left-radius:6px}
-.chat-msg img{max-width:200px;max-height:200px;border-radius:10px;margin:6px 0;display:block}
-.chat-img-label{font-size:11px;opacity:.7;margin-top:4px}
-.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;margin-bottom:4px}
-.badge-cam{background:var(--gold-light);color:var(--gold-dark)}
-.badge-ai{background:#EEF2FF;color:var(--blue)}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.input-bar{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);background:var(--bg);align-items:center}
-.input-bar input{flex:1;padding:12px 16px;border:2px solid var(--border);border-radius:99px;font-size:15px;font-family:var(--font);outline:none;transition:border .2s}
-.input-bar input:focus{border-color:var(--gold)}
-.cam-btn{width:42px;height:42px;border-radius:50%;border:2px solid var(--border);background:var(--bg);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
-.cam-btn:hover,.cam-btn:active{border-color:var(--gold);background:var(--gold-light)}
-.send-btn{width:42px;height:42px;border-radius:50%;border:none;background:var(--gold);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-.send-btn:hover{background:var(--gold-dark)}
-#camInput,#fileInput{display:none}
-/* Crop overlay */
-.crop-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.92);display:none;flex-direction:column}
-.crop-overlay.open{display:flex}
-.crop-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;color:#fff}
-.crop-toolbar button{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 16px;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)}
-.crop-toolbar button.primary{background:var(--gold);border-color:var(--gold)}
-.crop-canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
-.crop-canvas-wrap canvas{max-width:100%;max-height:100%;object-fit:contain}
-.crop-hint{position:absolute;bottom:16px;color:rgba(255,255,255,.5);font-size:13px;text-align:center;width:100%;pointer-events:none}
-.attach-btn{width:42px;height:42px;border-radius:50%;border:2px solid var(--border);background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
-.attach-btn:hover,.attach-btn:active{border-color:var(--gold);background:var(--gold-light)}
-.action-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-.action-btn{padding:8px 14px;border-radius:99px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--font);white-space:nowrap}
-.action-btn:hover,.action-btn:active{background:var(--gold-light);border-color:var(--gold)}
-.action-btn.primary{background:var(--gold);color:#fff;border-color:var(--gold)}
-.action-btn.accent{background:var(--blue);color:#fff;border-color:var(--blue)}
-.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center}
-.welcome-icon{font-size:56px;margin-bottom:16px}
-.welcome h2{font-size:22px;margin-bottom:8px}
-.welcome p{color:var(--text2);font-size:14px;max-width:300px;margin-bottom:24px}
-.subject-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;width:100%;max-width:400px;margin-bottom:24px}
-.subject-chip{padding:10px 8px;border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;text-align:center}
-.subject-chip:hover{border-color:var(--gold)}
-.subject-chip.selected{background:var(--gold-light);border-color:var(--gold);color:var(--gold-dark)}
-.subject-chip .icon{font-size:20px;display:block;margin-bottom:2px}
-.app{display:flex;flex-direction:column;height:100dvh}
-.page{display:none;flex-direction:column;flex:1;overflow:hidden}
-.page.active{display:flex}
-.about{overflow-y:auto;padding:24px 16px}
-.about h2{font-size:20px;margin:24px 0 12px}
-.about p{color:var(--text2);font-size:14px;margin-bottom:16px}
-.about .feature-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
-.about .feature-mini{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center}
-.about .feature-mini .icon{font-size:28px;margin-bottom:6px}
-.about .feature-mini h4{font-size:13px;font-weight:700}
-.about .feature-mini p{font-size:11px;margin-top:4px}
-.about .testimonial{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px}
-.about .stars{color:var(--gold)}
-/* Explainer Overlay */
-.explainer-overlay{position:fixed;inset:0;z-index:500;background:var(--bg);display:none;flex-direction:column;animation:slideUp .3s}
-.explainer-overlay.open{display:flex}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.exp-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
-.exp-topbar h2{font-size:15px;font-weight:700}
-.exp-badge{font-size:10px;padding:3px 10px;border-radius:99px;background:var(--gold-light);color:var(--gold-dark);font-weight:600}
-.exp-body{flex:1;overflow-y:auto}
-.exp-slide{display:none;padding:24px 20px;animation:fadeIn .3s}
-.exp-slide.active{display:block}
-.exp-slide h3{font-size:17px;margin-bottom:16px}
-.exp-slide h4{font-size:14px;margin:16px 0 8px}
-.exp-slide p{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:12px}
-.exp-slide code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:13px}
-.solution-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin:16px 0}
-.solution-block .step{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
-.solution-block .step:last-child{border-bottom:none}
-.step-num{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.tip-card{background:var(--gold-light);border:1px solid var(--gold);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px}
-.tip-card p{font-size:13px;color:var(--gold-dark)}
-.video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:var(--radius-sm);margin:16px 0;border:1px solid var(--border)}
-.video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%}
-.exp-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 16px;border-top:1px solid var(--border);background:var(--bg)}
-.exp-nav button{padding:10px 20px;border-radius:99px;border:1px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
-.exp-nav button:hover{background:var(--bg2)}
-.exp-nav button.primary{background:var(--gold);color:#fff;border-color:var(--gold)}
-.exp-dots{display:flex;gap:6px}
-.exp-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .2s}
-.exp-dot.active{background:var(--gold);width:20px;border-radius:4px}
-@media(max-width:480px){.chat-msg{max-width:92%;font-size:13px}.mode-bar{padding:6px 10px;gap:4px}.mode-chip{padding:5px 10px;font-size:11px}.topbar h1{font-size:16px}.exp-slide{padding:16px 14px}}
+:root{--gold:#F5A623;--gold-dark:#D4891A;--gold-light:#FFF3DC;--blue:#2563EB;--blue-dark:#1D4ED8;--green:#16A34A;--bg:#FFFFFF;--bg2:#F8FAFC;--bg3:#F1F5F9;--text:#0F172A;--text2:#475569;--text3:#94A3B8;--border:#E2E8F0;--radius:12px;--radius-sm:8px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}*{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dvh;overflow:hidden}.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg)}.topbar h1{font-size:18px;font-weight:800}.topbar h1 span{color:var(--gold)}.topbar-actions{display:flex;gap:6px;align-items:center}.icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}.mode-bar{display:flex;gap:6px;padding:8px 16px;overflow-x:auto;border-bottom:1px solid var(--border)}.mode-chip{padding:6px 14px;border-radius:99px;border:1px solid var(--border);cursor:pointer;font-size:12px;font-weight:500;background:var(--bg);white-space:nowrap}.mode-chip.active{background:var(--gold);color:#fff;border-color:var(--gold)}.chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}.chat-msg{max-width:88%;padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.5;animation:fadeIn .3s;word-wrap:break-word}.chat-msg.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:6px}.chat-msg.ai{align-self:flex-start;background:var(--bg2);border:1px solid var(--border);border-bottom-left-radius:6px}.chat-msg img{max-width:200px;max-height:200px;border-radius:10px;margin:6px 0;display:block}.chat-img-label{font-size:11px;opacity:.7;margin-top:4px}.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;margin-bottom:4px}.badge-cam{background:var(--gold-light);color:var(--gold-dark)}.badge-ai{background:#EEF2FF;color:var(--blue)}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}.input-bar{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);background:var(--bg);align-items:center}.input-bar input{flex:1;padding:12px 16px;border:2px solid var(--border);border-radius:99px;font-size:15px;font-family:var(--font);outline:none}.input-bar input:focus{border-color:var(--gold)}.cam-btn{width:42px;height:42px;border-radius:50%;border:2px solid var(--border);background:var(--bg);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}.cam-btn:hover,.cam-btn:active{border-color:var(--gold);background:var(--gold-light)}.send-btn{width:42px;height:42px;border-radius:50%;border:none;background:var(--gold);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}.send-btn:hover{background:var(--gold-dark)}#camInput,#fileInput{display:none}.crop-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.92);display:none;flex-direction:column}.crop-overlay.open{display:flex}.crop-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;color:#fff}.crop-toolbar button{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 16px;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)}.crop-toolbar button.primary{background:var(--gold);border-color:var(--gold)}.crop-canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}.crop-canvas-wrap canvas{max-width:100%;max-height:100%;object-fit:contain}.attach-btn{width:42px;height:42px;border-radius:50%;border:2px solid var(--border);background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}.action-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}.action-btn{padding:8px 14px;border-radius:99px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);white-space:nowrap}.action-btn:hover,.action-btn:active{background:var(--gold-light);border-color:var(--gold)}.action-btn.primary{background:var(--gold);color:#fff;border-color:var(--gold)}.action-btn.accent{background:var(--blue);color:#fff;border-color:var(--blue)}.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center}.welcome-icon{font-size:56px;margin-bottom:16px}.welcome h2{font-size:22px;margin-bottom:8px}.welcome p{color:var(--text2);font-size:14px;max-width:300px;margin-bottom:24px}.subject-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;width:100%;max-width:400px;margin-bottom:24px}.subject-chip{padding:10px 8px;border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:500;text-align:center}.subject-chip:hover{border-color:var(--gold)}.subject-chip.selected{background:var(--gold-light);border-color:var(--gold);color:var(--gold-dark)}.subject-chip .icon{font-size:20px;display:block;margin-bottom:2px}.app{display:flex;flex-direction:column;height:100dvh}.page{display:none;flex-direction:column;flex:1;overflow:hidden}.page.active{display:flex}.about{overflow-y:auto;padding:24px 16px}.about h2{font-size:20px;margin:24px 0 12px}.about p{color:var(--text2);font-size:14px;margin-bottom:16px}.about .feature-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}.about .feature-mini{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center}.about .feature-mini .icon{font-size:28px;margin-bottom:6px}.about .feature-mini h4{font-size:13px;font-weight:700}.about .feature-mini p{font-size:11px;margin-top:4px}.about .testimonial{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px}.about .stars{color:var(--gold)}.explainer-overlay{position:fixed;inset:0;z-index:500;background:var(--bg);display:none;flex-direction:column;animation:slideUp .3s}.explainer-overlay.open{display:flex}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.exp-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}.exp-topbar h2{font-size:15px;font-weight:700}.exp-badge{font-size:10px;padding:3px 10px;border-radius:99px;background:var(--gold-light);color:var(--gold-dark);font-weight:600}.exp-body{flex:1;overflow-y:auto}.exp-slide{display:none;padding:24px 20px;animation:fadeIn .3s}.exp-slide.active{display:block}.exp-slide h3{font-size:17px;margin-bottom:16px}.exp-slide h4{font-size:14px;margin:16px 0 8px}.exp-slide p{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:12px}.exp-slide code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:13px}.solution-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin:16px 0}.solution-block .step{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}.solution-block .step:last-child{border-bottom:none}.step-num{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}.tip-card{background:var(--gold-light);border:1px solid var(--gold);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px}.tip-card p{font-size:13px;color:var(--gold-dark)}.exp-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 16px;border-top:1px solid var(--border);background:var(--bg)}.exp-nav button{padding:10px 20px;border-radius:99px;border:1px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}.exp-nav button.primary{background:var(--gold);color:#fff;border-color:var(--gold)}.exp-dots{display:flex;gap:6px}.exp-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}.exp-dot.active{background:var(--gold);width:20px;border-radius:4px}@media(max-width:480px){.chat-msg{max-width:92%;font-size:13px}.mode-bar{padding:6px 10px;gap:4px}.mode-chip{padding:5px 10px;font-size:11px}.topbar h1{font-size:16px}.exp-slide{padding:16px 14px}}
 </style>
 </head>
 <body>
 <div class="app" id="app">
 <div class="page active" id="page-chat">
   <div class="topbar"><h1>Study<span>Forge</span></h1><div class="topbar-actions"><button class="icon-btn" onclick="showAbout()">ℹ️</button><button class="icon-btn" onclick="showWelcome()">📚</button></div></div>
-  <div class="mode-bar">
-    <button class="mode-chip active" data-mode="solve" onclick="setMode('solve')">🧮 Solver</button>
-    <button class="mode-chip" data-mode="socratic" onclick="setMode('socratic')">💭 Socratic</button>
-    <button class="mode-chip" data-mode="explain" onclick="setMode('explain')">📖 Explain</button>
-  </div>
-  <div class="chat" id="chat">
-    <div class="chat-msg ai">👋 <strong>Hi! I'm your AI tutor.</strong><br><br>📷 <strong>Snap a photo</strong> of any homework problem<br>💬 <strong>Type a problem</strong> — I'll solve it step by step<br>🎯 <strong>Pick a mode</strong> — Solver, Socratic, or Explain<br><br><span style="font-size:12px;opacity:.6">Try: "Solve 2x²+7x-15=0" or "A train leaves at 8am..."</span></div>
-  </div>
+  <div class="mode-bar"><button class="mode-chip active" data-mode="solve" onclick="setMode('solve')">🧮 Solver</button><button class="mode-chip" data-mode="socratic" onclick="setMode('socratic')">💭 Socratic</button><button class="mode-chip" data-mode="explain" onclick="setMode('explain')">📖 Explain</button></div>
+  <div class="chat" id="chat"><div class="chat-msg ai">👋 <strong>Hi! I'm your AI tutor.</strong><br><br>📷 <strong>Snap a photo</strong> of any homework problem<br>💬 <strong>Type a problem</strong> — I'll solve it step by step<br>🎯 <strong>Pick a mode</strong> — Solver, Socratic, or Explain<br><br><span style="font-size:12px;opacity:.6">Try: "Solve 2x²+7x-15=0" or "A train leaves at 8am..."</span></div></div>
   <div class="input-bar">
-    <input type="file" id="camInput" accept="image/*" capture="environment" onchange="pickImage(this)">
-    <input type="file" id="fileInput" accept="image/*" onchange="pickImage(this)">
-    <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Upload from gallery">📎</button>
-    <button class="cam-btn" onclick="document.getElementById('camInput').click()" title="Take photo">📷</button>
-    <input type="text" id="msgInput" placeholder="Type a math problem..." onkeydown="if(event.key==='Enter')send()">
-    <button class="send-btn" onclick="send()">➤</button>
+    <input type="file" id="camInput" accept="image/*" capture="environment" onchange="pickImage(this)"><input type="file" id="fileInput" accept="image/*" onchange="pickImage(this)">
+    <button class="attach-btn" onclick="document.getElementById('fileInput').click()">📎</button><button class="cam-btn" onclick="document.getElementById('camInput').click()">📷</button>
+    <input type="text" id="msgInput" placeholder="Type a math problem..." onkeydown="if(event.key==='Enter')send()"><button class="send-btn" onclick="send()">➤</button>
   </div>
 </div>
-<div class="page" id="page-welcome">
-  <div class="topbar"><h1>Study<span>Forge</span></h1><button class="icon-btn" onclick="goHome()">✕</button></div>
-  <div class="chat" style="overflow-y:auto"><div class="welcome"><div class="welcome-icon">📚</div><h2>What are you studying?</h2><p>Pick your subjects.</p><div class="subject-grid" id="subjectGrid"></div><button class="cam-btn" style="width:auto;border-radius:99px;padding:12px 24px;font-size:15px;font-weight:600" onclick="saveSubjects()">Start →</button></div></div>
+<div class="page" id="page-welcome"><div class="topbar"><h1>Study<span>Forge</span></h1><button class="icon-btn" onclick="goHome()">✕</button></div><div class="chat" style="overflow-y:auto"><div class="welcome"><div class="welcome-icon">📚</div><h2>What are you studying?</h2><p>Pick your subjects.</p><div class="subject-grid" id="subjectGrid"></div><button class="cam-btn" style="width:auto;border-radius:99px;padding:12px 24px;font-size:15px;font-weight:600" onclick="saveSubjects()">Start →</button></div></div></div>
+<div class="page" id="page-about"><div class="topbar"><h1>Study<span>Forge</span></h1><button class="icon-btn" onclick="goHome()">✕</button></div><div class="about"><h2>📸 Snap. Learn. Ace it.</h2><p>Powered by <strong>Nano Banana 2</strong> via Higgsfield AI. Real step-by-step solutions.</p></div></div>
+<div class="explainer-overlay" id="explainer"><div class="exp-topbar"><h2>📖 <span id="expTitle">Full Solution</span></h2><div style="display:flex;gap:8px;align-items:center"><span class="exp-badge" id="expBadge">Nano Banana 2</span><button class="icon-btn" onclick="closeExplainer()">✕</button></div></div><div class="exp-body" id="expBody"></div><div class="exp-nav"><button onclick="expSlide(-1)" id="expPrev">← Prev</button><div class="exp-dots" id="expDots"></div><button onclick="expSlide(1)" class="primary" id="expNext">Next →</button></div></div>
+<div class="crop-overlay" id="cropOverlay"><div class="crop-toolbar"><button onclick="cancelCrop()">Cancel</button><span style="font-weight:600">✂️ Crop image</span><button class="primary" onclick="sendFullImage()">Skip →</button></div><div class="crop-canvas-wrap"><canvas id="cropCanvas"></canvas></div><div class="crop-toolbar" style="justify-content:center;border-top:none;padding-top:0"><button class="primary" onclick="applyCrop()">Crop & Send →</button></div></div>
 </div>
-<div class="page" id="page-about">
-  <div class="topbar"><h1>Study<span>Forge</span></h1><button class="icon-btn" onclick="goHome()">✕</button></div>
-  <div class="about"><h2>📸 Snap. Learn. Ace it.</h2><p>Powered by <strong>Nano Banana 2</strong> via Higgsfield AI. Real step-by-step solutions.</p></div>
-</div>
-<div class="explainer-overlay" id="explainer">
-  <div class="exp-topbar"><h2>📖 <span id="expTitle">Full Solution</span></h2><div style="display:flex;gap:8px;align-items:center"><span class="exp-badge" id="expBadge">Nano Banana 2</span><button class="icon-btn" onclick="closeExplainer()">✕</button></div></div>
-  <div class="exp-body" id="expBody"></div>
-  <div class="exp-nav"><button onclick="expSlide(-1)" id="expPrev">← Prev</button><div class="exp-dots" id="expDots"></div><button onclick="expSlide(1)" class="primary" id="expNext">Next →</button></div>
-</div>
-
-<!-- Crop overlay -->
-<div class="crop-overlay" id="cropOverlay">
-  <div class="crop-toolbar">
-    <button onclick="cancelCrop()">Cancel</button>
-    <span style="font-weight:600">✂️ Crop image</span>
-    <button class="primary" onclick="sendFullImage()">Skip →</button>
-  </div>
-  <div class="crop-canvas-wrap">
-    <canvas id="cropCanvas"></canvas>
-  </div>
-  <div class="crop-toolbar" style="justify-content:center;border-top:none;padding-top:0">
-    <button class="primary" onclick="applyCrop()">Crop & Send →</button>
-  </div>
-</div>
-</div>
-
 <script>
-// ═══════════════ PROBLEM BANK ═══════════════
-// Each entry: {keywords, topic, problem, solution, tips}
-const PROBLEMS = [
-  // ── Algebra ──
-  {k:'linear equation solve for x 5(-3x-2)-(x-3)=-4(4x+5)+13 identity', topic:'Linear Equations',
-   q:'5(-3x-2)-(x-3) = -4(4x+5)+13',
-   s:`<strong>Step 1: Expand both sides</strong><br>Left: -15x-10-x+3 = <code>-16x-7</code><br>Right: -16x-20+13 = <code>-16x-7</code><br><br><strong>Step 2: Compare</strong><br><code>-16x-7 = -16x-7</code><br><br><strong>Step 3: Conclusion</strong><br>Both sides are identical → <strong>0 = 0</strong><br><br>✅ <strong>All real numbers are solutions.</strong> This is an identity equation.`,
-   tips:'• When both sides simplify to the same expression, it\'s an identity<br>• Always expand fully before concluding<br>• Check: plug x=0 → both sides = -7 ✓'},
-  {k:'factor polynomial x3 x^3 4x2 4x^2 7x 10 cubic P(x) roots', topic:'Polynomial Factoring',
-   q:'Factor P(x)=x³−4x²−7x+10',
-   s:`<strong>Step 1: Rational Root Theorem</strong><br>Possible roots: ±1, ±2, ±5, ±10<br><br><strong>Step 2: Test x=1</strong><br>P(1)=1−4−7+10=<strong>0 ✓</strong> → (x−1) is a factor<br><br><strong>Step 3: Polynomial division</strong><br>P(x)÷(x−1) = x²−3x−10<br><br><strong>Step 4: Factor the quadratic</strong><br>x²−3x−10 = (x−5)(x+2)<br><br>✅ <strong>P(x) = (x−1)(x−5)(x+2)</strong>`,
-   tips:'• Always test ±1 first — it\'s the most common root<br>• Use synthetic division for speed<br>• Verify by expanding: (x−1)(x−5)(x+2) = x³−4x²−7x+10 ✓'},
-  {k:'quadratic formula solve 2x2 2x^2 7x -15 0 discriminant roots parabola', topic:'Quadratic Formula',
-   q:'2x²+7x−15=0',
-   s:`<strong>Step 1: Identify coefficients</strong><br>a=2, b=7, c=−15<br><br><strong>Step 2: Discriminant</strong><br>b²−4ac = 49−4(2)(−15) = 49+120 = <strong>169</strong><br><br><strong>Step 3: Square root</strong><br>√169 = <strong>13</strong><br><br><strong>Step 4: Apply formula</strong><br>x = (−7±13)/4<br><br><strong>Step 5: Two solutions</strong><br>x₁ = (−7+13)/4 = 6/4 = <strong>3/2</strong><br>x₂ = (−7−13)/4 = −20/4 = <strong>−5</strong><br><br>✅ <strong>x = 1.5 or x = −5</strong>`,
-   tips:'• Discriminant > 0 → two real solutions<br>• 169 is a perfect square (13²) → nice solutions<br>• Could also factor: (2x−3)(x+5)=0'},
-  {k:'exponential solve 6*3^x 6·3^x 162 power base log', topic:'Exponential Equations',
-   q:'6·3ˣ = 162',
-   s:`<strong>Step 1: Isolate exponential</strong><br>3ˣ = 162/6 = <strong>27</strong><br><br><strong>Step 2: Express as powers of 3</strong><br>27 = 3³<br><br><strong>Step 3: Equate exponents</strong><br>3ˣ = 3³ → <strong>x = 3</strong><br><br>✅ <strong>x = 3</strong><br><em>Check: 6·3³ = 6·27 = 162 ✓</em>`,
-   tips:'• Get the exponential term alone before taking logs<br>• Look for powers of the base first<br>• If base doesn\'t match, use logarithms'},
-  {k:'arithmetic sequence find 30th term a=7 a15=-35', topic:'Arithmetic Sequences',
-   q:'a₁=7, a₁₅=−35. Find a₃₀',
-   s:`<strong>Step 1: Formula</strong><br>aₙ = a₁ + (n−1)d<br><br><strong>Step 2: Find d using a₁₅</strong><br>−35 = 7 + 14d<br>14d = −42<br><strong>d = −3</strong><br><br><strong>Step 3: Find a₃₀</strong><br>a₃₀ = 7 + 29(−3)<br>= 7 − 87<br>= <strong>−80</strong><br><br>✅ <strong>a₃₀ = −80</strong>`,
-   tips:'• d = (aₙ−a₁)/(n−1)<br>• Common difference can be negative<br>• Each term decreases by 3'},
-  {k:'trigonometry trig sin cos 2cos²x 2cos^2x 3sinx 3 0 360 degrees identity', topic:'Trigonometric Equations',
-   q:'2cos²x+3sinx=3, 0°≤x≤360°',
-   s:`<strong>Step 1: Use identity</strong><br>cos²x = 1−sin²x<br>2(1−sin²x)+3sinx=3<br><br><strong>Step 2: Simplify</strong><br>2−2sin²x+3sinx=3<br>−2sin²x+3sinx−1=0<br>2sin²x−3sinx+1=0<br><br><strong>Step 3: Let u=sinx</strong><br>2u²−3u+1=0<br>(2u−1)(u−1)=0<br>u=½ or u=1<br><br><strong>Step 4: Solve</strong><br>sinx=½ → x=30°,150°<br>sinx=1 → x=90°<br><br>✅ <strong>x = 30°, 90°, 150°</strong>`,
-   tips:'• cos²x+sin²x=1 is the key identity<br>• sinx=½ has two solutions in [0°,360°]<br>• Always check domain restrictions'},
-  {k:'distance between points (-4,-5) (-1,-1)', topic:'Coordinate Geometry',
-   q:'Distance between (−4,−5) and (−1,−1)',
-   s:`<strong>Step 1: Distance formula</strong><br>d = √[(x₂−x₁)²+(y₂−y₁)²]<br><br><strong>Step 2: Plug in</strong><br>d = √[(−1−(−4))²+(−1−(−5))²]<br>= √[(3)²+(4)²]<br>= √[9+16]<br>= √25<br><br>✅ <strong>d = 5</strong><br><em>This is a 3-4-5 right triangle!</em>`,
-   tips:'• Double negatives → addition: −1−(−4)=3<br>• Recognize Pythagorean triples: (3,4,5)<br>• Always take the positive root for distance'},
+const P=[{k:'linear equation solve for x 5(-3x-2)-(x-3)=-4(4x+5)+13 identity',topic:'Linear Equations',q:'5(-3x-2)-(x-3) = -4(4x+5)+13',s:'<strong>Step 1: Expand both sides</strong><br>Left: -15x-10-x+3 = <code>-16x-7</code><br>Right: -16x-20+13 = <code>-16x-7</code><br><br><strong>Step 2: Compare</strong><br><code>-16x-7 = -16x-7</code><br><br><strong>Step 3: Conclusion</strong><br>Both sides are identical → <strong>0 = 0</strong><br><br>✅ <strong>All real numbers are solutions.</strong> This is an identity equation.',tips:'• When both sides simplify to the same expression, it\'s an identity<br>• Always expand fully before concluding<br>• Check: plug x=0 → both sides = -7 ✓'},{k:'factor polynomial x3 x^3 4x2 4x^2 7x 10 cubic P(x) roots',topic:'Polynomial Factoring',q:'Factor P(x)=x³−4x²−7x+10',s:'<strong>Step 1: Rational Root Theorem</strong><br>Possible roots: ±1, ±2, ±5, ±10<br><br><strong>Step 2: Test x=1</strong><br>P(1)=1−4−7+10=<strong>0 ✓</strong> → (x−1) is a factor<br><br><strong>Step 3: Polynomial division</strong><br>P(x)÷(x−1) = x²−3x−10<br><br><strong>Step 4: Factor the quadratic</strong><br>x²−3x−10 = (x−5)(x+2)<br><br>✅ <strong>P(x) = (x−1)(x−5)(x+2)</strong>',tips:"• Always test ±1 first — it's the most common root<br>• Use synthetic division for speed<br>• Verify by expanding: (x−1)(x−5)(x+2) = x³−4x²−7x+10 ✓"},{k:'quadratic formula solve 2x2 2x^2 7x -15 0 discriminant roots parabola',topic:'Quadratic Formula',q:'2x²+7x−15=0',s:'<strong>Step 1: Identify coefficients</strong><br>a=2, b=7, c=−15<br><br><strong>Step 2: Discriminant</strong><br>b²−4ac = 49−4(2)(−15) = 49+120 = <strong>169</strong><br><br><strong>Step 3: Square root</strong><br>√169 = <strong>13</strong><br><br><strong>Step 4: Apply formula</strong><br>x = (−7±13)/4<br><br><strong>Step 5: Two solutions</strong><br>x₁ = (−7+13)/4 = 6/4 = <strong>3/2</strong><br>x₂ = (−7−13)/4 = −20/4 = <strong>−5</strong><br><br>✅ <strong>x = 1.5 or x = −5</strong>',tips:'• Discriminant > 0 → two real solutions<br>• 169 is a perfect square (13²) → nice solutions<br>• Could also factor: (2x−3)(x+5)=0'},{k:'exponential solve 6*3^x 6·3^x 162 power base log',topic:'Exponential Equations',q:'6·3ˣ = 162',s:'<strong>Step 1: Isolate exponential</strong><br>3ˣ = 162/6 = <strong>27</strong><br><br><strong>Step 2: Express as powers of 3</strong><br>27 = 3³<br><br><strong>Step 3: Equate exponents</strong><br>3ˣ = 3³ → <strong>x = 3</strong><br><br>✅ <strong>x = 3</strong><br><em>Check: 6·3³ = 6·27 = 162 ✓</em>',tips:"• Get the exponential term alone before taking logs<br>• Look for powers of the base first<br>• If base doesn't match, use logarithms"},{k:'arithmetic sequence find 30th term a=7 a15=-35',topic:'Arithmetic Sequences',q:'a₁=7, a₁₅=−35. Find a₃₀',s:'<strong>Step 1: Formula</strong><br>aₙ = a₁ + (n−1)d<br><br><strong>Step 2: Find d using a₁₅</strong><br>−35 = 7 + 14d<br>14d = −42<br><strong>d = −3</strong><br><br><strong>Step 3: Find a₃₀</strong><br>a₃₀ = 7 + 29(−3)<br>= 7 − 87<br>= <strong>−80</strong><br><br>✅ <strong>a₃₀ = −80</strong>',tips:'• d = (aₙ−a₁)/(n−1)<br>• Common difference can be negative<br>• Each term decreases by 3'},{k:'trigonometry trig sin cos 2cos²x 2cos^2x 3sinx 3 0 360 degrees identity',topic:'Trigonometric Equations',q:'2cos²x+3sinx=3, 0°≤x≤360°',s:'<strong>Step 1: Use identity</strong><br>cos²x = 1−sin²x<br>2(1−sin²x)+3sinx=3<br><br><strong>Step 2: Simplify</strong><br>2−2sin²x+3sinx=3<br>−2sin²x+3sinx−1=0<br>2sin²x−3sinx+1=0<br><br><strong>Step 3: Let u=sinx</strong><br>2u²−3u+1=0<br>(2u−1)(u−1)=0<br>u=½ or u=1<br><br><strong>Step 4: Solve</strong><br>sinx=½ → x=30°,150°<br>sinx=1 → x=90°<br><br>✅ <strong>x = 30°, 90°, 150°</strong>',tips:'• cos²x+sin²x=1 is the key identity<br>• sinx=½ has two solutions in [0°,360°]<br>• Always check domain restrictions'},{k:'distance between points (-4,-5) (-1,-1)',topic:'Coordinate Geometry',q:'Distance between (−4,−5) and (−1,−1)',s:'<strong>Step 1: Distance formula</strong><br>d = √[(x₂−x₁)²+(y₂−y₁)²]<br><br><strong>Step 2: Plug in</strong><br>d = √[(−1−(−4))²+(−1−(−5))²]<br>= √[(3)²+(4)²]<br>= √[9+16]<br>= √25<br><br>✅ <strong>d = 5</strong><br><em>This is a 3-4-5 right triangle!</em>',tips:'• Double negatives → addition: −1−(−4)=3<br>• Recognize Pythagorean triples: (3,4,5)<br>• Always take the positive root for distance'},{k:'train leaves station 8am 60 mph another train 9am 75 mph 300 miles apart when meet',topic:'Rate × Time = Distance',q:'Train A leaves at 8am at 60mph. Train B leaves at 9am from 300mi away at 75mph toward A. When do they meet?',s:"<strong>Step 1: Define variable</strong><br>Let t = hours after 8:00 AM<br><br><strong>Step 2: Write distances</strong><br>Train A: d₁ = 60t<br>Train B: d₂ = 75(t−1) [left 1hr later]<br><br><strong>Step 3: Set up equation</strong><br>60t + 75(t−1) = 300<br><br><strong>Step 4: Solve</strong><br>60t + 75t − 75 = 300<br>135t = 375<br>t = 375/135 = 25/9 ≈ <strong>2.778 hours</strong><br><br><strong>Step 5: Convert to time</strong><br>2.778h = 2h 47min<br>8:00 + 2:47 = <strong>10:47 AM</strong><br><br>✅ <strong>They meet at 10:47 AM</strong>",tips:"• Key: sum of distances = total separation<br>• The second train's time is (t−1), not t<br>• Verify: 60×2.778=166.7, 75×1.778=133.3, sum=300 ✓"},{k:'work problem pipe fill tank 4 hours 6 hours together',topic:'Work Problems',q:'Pipe A fills a tank in 4 hours. Pipe B fills it in 6 hours. How long together?',s:'<strong>Step 1: Find rates</strong><br>Pipe A: 1/4 tank per hour<br>Pipe B: 1/6 tank per hour<br><br><strong>Step 2: Combined rate</strong><br>1/4 + 1/6 = 3/12 + 2/12 = <strong>5/12</strong> tank per hour<br><br><strong>Step 3: Time to fill</strong><br>Time = 1 ÷ (5/12) = 12/5 = <strong>2.4 hours</strong><br><br>✅ <strong>2 hours 24 minutes</strong>',tips:'• Rate = 1/time for "fill one tank" problems<br>• Add rates for combined work<br>• Time = 1/combined_rate'},{k:'mixture solution concentration 20% percent 50% 30% mix percent how much liter',topic:'Mixture Problems',q:'How much 20% solution must be mixed with 10L of 50% to get 30%?',s:'<strong>Step 1: Let x = liters of 20% solution</strong><br><br><strong>Step 2: Solute balance</strong><br>0.20x + 0.50(10) = 0.30(x+10)<br><br><strong>Step 3: Solve</strong><br>0.20x + 5 = 0.30x + 3<br>5 − 3 = 0.30x − 0.20x<br>2 = 0.10x<br><strong>x = 20 liters</strong><br><br>✅ <strong>20 liters of 20% solution</strong>',tips:'• Set up: solute in = solute out<br>• Total volume = x + 10<br>• Check: (0.2×20+0.5×10)/30 = 9/30 = 30% ✓'},{k:'inclined plane block ramp angle 30 friction coefficient 0.2 find acceleration',topic:'Inclined Plane',q:"Block on 30° incline, μ=0.2. Find acceleration.",s:"<strong>Step 1: Resolve gravity</strong><br>Parallel: mg·sin(30°) = mg·0.5<br>Perpendicular: mg·cos(30°) = mg·0.866<br><br><strong>Step 2: Normal force</strong><br>N = mg·cos(30°) = 0.866mg<br><br><strong>Step 3: Friction</strong><br>f = μN = 0.2×0.866mg = 0.173mg<br><br><strong>Step 4: Net force down ramp</strong><br>F = mg·sin(30°)−f<br>= mg(0.5−0.173) = 0.327mg<br><br><strong>Step 5: Acceleration</strong><br>a = F/m = 0.327g = 0.327×9.8<br>= <strong>3.20 m/s²</strong><br><br>✅ <strong>a = 3.20 m/s² down the ramp</strong>",tips:"• g·sinθ pulls down, friction opposes<br>• If μ>tanθ, block won't slide (μ=0.2<0.577→slides)<br>• Without friction: a=g·sin30°=4.9 m/s²"},{k:'projectile ball thrown launch 20 m/s ms angle 45 degrees max height range motion',topic:'Projectile Motion',q:'Ball thrown at 20 m/s, 45° angle. Find max height and range.',s:'<strong>Step 1: Resolve velocity</strong><br>vₓ = 20·cos(45°) = <strong>14.14 m/s</strong><br>vᵧ = 20·sin(45°) = <strong>14.14 m/s</strong><br><br><strong>Step 2: Max height</strong><br>H = vᵧ²/(2g) = 200/(2×9.8)<br>= <strong>10.2 m</strong><br><br><strong>Step 3: Time of flight</strong><br>T = 2vᵧ/g = 28.28/9.8 = <strong>2.89 s</strong><br><br><strong>Step 4: Range</strong><br>R = vₓ·T = 14.14×2.89 = <strong>40.8 m</strong><br><br>✅ <strong>H=10.2m, R=40.8m</strong>',tips:'• 45° gives maximum range for a given speed<br>• Time up = time down (symmetry)<br>• Air resistance ignored in basic model'},{k:'kinematics car accelerate accelerating rest 2 m/s² ms2 5 seconds sec distance velocity suvat',topic:'Kinematics',q:'Car accelerates at 2 m/s² from rest for 5s. Find final velocity and distance.',s:'<strong>Step 1: Final velocity</strong><br>v = u + at<br>v = 0 + 2×5 = <strong>10 m/s</strong><br><br><strong>Step 2: Distance</strong><br>s = ut + ½at²<br>s = 0 + ½×2×25<br>= <strong>25 m</strong><br><br>Alternatively: s = ½(u+v)t = ½×10×5 = 25m ✓<br><br>✅ <strong>v=10 m/s, s=25 m</strong>',tips:'• SUVAT: s=ut+½at², v=u+at, v²=u²+2as<br>• Average velocity = (u+v)/2 = 5 m/s<br>• Check: 5 m/s × 5s = 25 m ✓'},{k:'balance equation chemical H2 O2 H2O stoichiometry reaction chemistry into plus arrow',topic:'Balancing Equations',q:'Balance: H₂ + O₂ → H₂O',s:'<strong>Step 1: Count atoms</strong><br>Left: H=2, O=2<br>Right: H=2, O=1<br><br><strong>Step 2: Balance O</strong><br>H₂ + O₂ → <strong>2</strong>H₂O<br>Now: H=2,O=2 → H=4,O=2<br><br><strong>Step 3: Balance H</strong><br><strong>2</strong>H₂ + O₂ → 2H₂O<br>Now: H=4,O=2 → H=4,O=2 ✓<br><br>✅ <strong>2H₂ + O₂ → 2H₂O</strong>',tips:'• Balance O last (appears in one compound each side)<br>• Coefficients must be simplest whole numbers<br>• Always recount after each change'},{k:'molar mass calculate glucose C6H12O6',topic:'Molar Mass',q:'Calculate the molar mass of glucose, C₆H₁₂O₆',s:'<strong>Step 1: Atomic masses</strong><br>C = 12.01 g/mol<br>H = 1.008 g/mol<br>O = 16.00 g/mol<br><br><strong>Step 2: Multiply by counts</strong><br>C: 6 × 12.01 = 72.06<br>H: 12 × 1.008 = 12.10<br>O: 6 × 16.00 = 96.00<br><br><strong>Step 3: Sum</strong><br>72.06 + 12.10 + 96.00 = <strong>180.16 g/mol</strong><br><br>✅ <strong>180.16 g/mol</strong>',tips:'• Use periodic table for atomic masses<br>• Watch subscripts: C₆ means 6 carbons<br>• Round to 2 decimal places typically'},{k:'limiting reagent 2H2 O2 4 mol H2 3 mol O2 excess',topic:'Limiting Reagent',q:'2H₂+O₂→2H₂O. 4 mol H₂, 3 mol O₂. Find limiting reagent.',s:'<strong>Step 1: Mole ratio from equation</strong><br>2 mol H₂ : 1 mol O₂<br><br><strong>Step 2: How much O₂ needed?</strong><br>4 mol H₂ × (1 O₂/2 H₂) = <strong>2 mol O₂ needed</strong><br><br><strong>Step 3: Compare</strong><br>Have: 3 mol O₂<br>Need: 2 mol O₂<br>O₂ is in <strong>excess</strong>, H₂ is <strong>limiting</strong><br><br><strong>Step 4: Products from limiting reagent</strong><br>4 mol H₂ × (2 H₂O/2 H₂) = <strong>4 mol H₂O</strong><br><br>✅ <strong>H₂ is limiting → 4 mol H₂O produced</strong>',tips:'• Limiting reagent = the one that runs out first<br>• Calculate how much of EACH reactant you need<br>• Products depend on limiting reagent, not excess'}];
 
-  // ── Word Problems ──
-  {k:'train leaves station 8am 60 mph another train 9am 75 mph 300 miles apart when meet', topic:'Rate × Time = Distance',
-   q:'Train A leaves at 8am at 60mph. Train B leaves at 9am from 300mi away at 75mph toward A. When do they meet?',
-   s:`<strong>Step 1: Define variable</strong><br>Let t = hours after 8:00 AM<br><br><strong>Step 2: Write distances</strong><br>Train A: d₁ = 60t<br>Train B: d₂ = 75(t−1) [left 1hr later]<br><br><strong>Step 3: Set up equation</strong><br>60t + 75(t−1) = 300<br><br><strong>Step 4: Solve</strong><br>60t + 75t − 75 = 300<br>135t = 375<br>t = 375/135 = 25/9 ≈ <strong>2.778 hours</strong><br><br><strong>Step 5: Convert to time</strong><br>2.778h = 2h 47min<br>8:00 + 2:47 = <strong>10:47 AM</strong><br><br>✅ <strong>They meet at 10:47 AM</strong>`,
-   tips:'• Key: sum of distances = total separation<br>• The second train\'s time is (t−1), not t<br>• Verify: 60×2.778=166.7, 75×1.778=133.3, sum=300 ✓'},
-  {k:'work problem pipe fill tank 4 hours 6 hours together', topic:'Work Problems',
-   q:'Pipe A fills a tank in 4 hours. Pipe B fills it in 6 hours. How long together?',
-   s:`<strong>Step 1: Find rates</strong><br>Pipe A: 1/4 tank per hour<br>Pipe B: 1/6 tank per hour<br><br><strong>Step 2: Combined rate</strong><br>1/4 + 1/6 = 3/12 + 2/12 = <strong>5/12</strong> tank per hour<br><br><strong>Step 3: Time to fill</strong><br>Time = 1 ÷ (5/12) = 12/5 = <strong>2.4 hours</strong><br><br>✅ <strong>2 hours 24 minutes</strong>`,
-   tips:'• Rate = 1/time for "fill one tank" problems<br>• Add rates for combined work<br>• Time = 1/combined_rate'},
-  {k:'mixture solution concentration 20% percent 50% 30% mix percent how much liter', topic:'Mixture Problems',
-   q:'How much 20% solution must be mixed with 10L of 50% to get 30%?',
-   s:`<strong>Step 1: Let x = liters of 20% solution</strong><br><br><strong>Step 2: Solute balance</strong><br>0.20x + 0.50(10) = 0.30(x+10)<br><br><strong>Step 3: Solve</strong><br>0.20x + 5 = 0.30x + 3<br>5 − 3 = 0.30x − 0.20x<br>2 = 0.10x<br><strong>x = 20 liters</strong><br><br>✅ <strong>20 liters of 20% solution</strong>`,
-   tips:'• Set up: solute in = solute out<br>• Total volume = x + 10<br>• Check: (0.2×20+0.5×10)/30 = 9/30 = 30% ✓'},
+function M(t){const l=t.toLowerCase().replace(/[^a-z0-9\s\+\-\=\(\)\^°]/g,' ').replace(/\s+/g,' ').trim();let b=null,s=0;for(const p of P){const w=p.k.split(' ');let c=0;for(const x of w){if(l.includes(x))c++;if(x.length>3){for(let i=0;i<x.length-3;i++){if(l.includes(x.substring(i,i+4))){c+=0.3;break}}}}c/=w.length;if(c>s){s=c;b=p}}return s>=0.20?b:null}
 
-  // ── Physics ──
-  {k:'inclined plane block ramp angle 30 friction coefficient 0.2 find acceleration', topic:'Inclined Plane',
-   q:'Block on 30° incline, μ=0.2. Find acceleration.',
-   s:`<strong>Step 1: Resolve gravity</strong><br>Parallel: mg·sin(30°) = mg·0.5<br>Perpendicular: mg·cos(30°) = mg·0.866<br><br><strong>Step 2: Normal force</strong><br>N = mg·cos(30°) = 0.866mg<br><br><strong>Step 3: Friction</strong><br>f = μN = 0.2×0.866mg = 0.173mg<br><br><strong>Step 4: Net force down ramp</strong><br>F = mg·sin(30°)−f<br>= mg(0.5−0.173) = 0.327mg<br><br><strong>Step 5: Acceleration</strong><br>a = F/m = 0.327g = 0.327×9.8<br>= <strong>3.20 m/s²</strong><br><br>✅ <strong>a = 3.20 m/s² down the ramp</strong>`,
-   tips:'• g·sinθ pulls down, friction opposes<br>• If μ>tanθ, block won\'t slide (μ=0.2<0.577→slides)<br>• Without friction: a=g·sin30°=4.9 m/s²'},
-  {k:'projectile ball thrown launch 20 m/s ms angle 45 degrees max height range motion', topic:'Projectile Motion',
-   q:'Ball thrown at 20 m/s, 45° angle. Find max height and range.',
-   s:`<strong>Step 1: Resolve velocity</strong><br>vₓ = 20·cos(45°) = <strong>14.14 m/s</strong><br>vᵧ = 20·sin(45°) = <strong>14.14 m/s</strong><br><br><strong>Step 2: Max height</strong><br>H = vᵧ²/(2g) = 200/(2×9.8)<br>= <strong>10.2 m</strong><br><br><strong>Step 3: Time of flight</strong><br>T = 2vᵧ/g = 28.28/9.8 = <strong>2.89 s</strong><br><br><strong>Step 4: Range</strong><br>R = vₓ·T = 14.14×2.89 = <strong>40.8 m</strong><br><br>✅ <strong>H=10.2m, R=40.8m</strong>`,
-   tips:'• 45° gives maximum range for a given speed<br>• Time up = time down (symmetry)<br>• Air resistance ignored in basic model'},
-  {k:'kinematics car accelerate accelerating rest 2 m/s² ms2 5 seconds sec distance velocity suvat', topic:'Kinematics',
-   q:'Car accelerates at 2 m/s² from rest for 5s. Find final velocity and distance.',
-   s:`<strong>Step 1: Final velocity</strong><br>v = u + at<br>v = 0 + 2×5 = <strong>10 m/s</strong><br><br><strong>Step 2: Distance</strong><br>s = ut + ½at²<br>s = 0 + ½×2×25<br>= <strong>25 m</strong><br><br>Alternatively: s = ½(u+v)t = ½×10×5 = 25m ✓<br><br>✅ <strong>v=10 m/s, s=25 m</strong>`,
-   tips:'• SUVAT: s=ut+½at², v=u+at, v²=u²+2as<br>• Average velocity = (u+v)/2 = 5 m/s<br>• Check: 5 m/s × 5s = 25 m ✓'},
+const S=[{n:'Mathematics',i:'📐'},{n:'Physics',i:'⚡'},{n:'Chemistry',i:'🧪'},{n:'Biology',i:'🧬'},{n:'History',i:'📜'},{n:'Economics',i:'📈'},{n:'English',i:'📖'},{n:'Computer Science',i:'💻'},{n:'Psychology',i:'🧠'},{n:'Geography',i:'🌍'},{n:'Languages',i:'🗣️'},{n:'Law',i:'⚖️'},{n:'Business',i:'💼'},{n:'Sociology',i:'👥'}];
+let ss=new Set(['Mathematics']),tm='solve',sl=[],si=0;
 
-  // ── Chemistry ──
-  {k:'balance equation chemical H2 O2 H2O stoichiometry reaction chemistry into plus arrow', topic:'Balancing Equations',
-   q:'Balance: H₂ + O₂ → H₂O',
-   s:`<strong>Step 1: Count atoms</strong><br>Left: H=2, O=2<br>Right: H=2, O=1<br><br><strong>Step 2: Balance O</strong><br>H₂ + O₂ → <strong>2</strong>H₂O<br>Now: H=2,O=2 → H=4,O=2<br><br><strong>Step 3: Balance H</strong><br><strong>2</strong>H₂ + O₂ → 2H₂O<br>Now: H=4,O=2 → H=4,O=2 ✓<br><br>✅ <strong>2H₂ + O₂ → 2H₂O</strong>`,
-   tips:'• Balance O last (appears in one compound each side)<br>• Coefficients must be simplest whole numbers<br>• Always recount after each change'},
-  {k:'molar mass calculate glucose C6H12O6', topic:'Molar Mass',
-   q:'Calculate the molar mass of glucose, C₆H₁₂O₆',
-   s:`<strong>Step 1: Atomic masses</strong><br>C = 12.01 g/mol<br>H = 1.008 g/mol<br>O = 16.00 g/mol<br><br><strong>Step 2: Multiply by counts</strong><br>C: 6 × 12.01 = 72.06<br>H: 12 × 1.008 = 12.10<br>O: 6 × 16.00 = 96.00<br><br><strong>Step 3: Sum</strong><br>72.06 + 12.10 + 96.00 = <strong>180.16 g/mol</strong><br><br>✅ <strong>180.16 g/mol</strong>`,
-   tips:'• Use periodic table for atomic masses<br>• Watch subscripts: C₆ means 6 carbons<br>• Round to 2 decimal places typically'},
-  {k:'limiting reagent 2H2 O2 4 mol H2 3 mol O2 excess', topic:'Limiting Reagent',
-   q:'2H₂+O₂→2H₂O. 4 mol H₂, 3 mol O₂. Find limiting reagent.',
-   s:`<strong>Step 1: Mole ratio from equation</strong><br>2 mol H₂ : 1 mol O₂<br><br><strong>Step 2: How much O₂ needed?</strong><br>4 mol H₂ × (1 O₂/2 H₂) = <strong>2 mol O₂ needed</strong><br><br><strong>Step 3: Compare</strong><br>Have: 3 mol O₂<br>Need: 2 mol O₂<br>O₂ is in <strong>excess</strong>, H₂ is <strong>limiting</strong><br><br><strong>Step 4: Products from limiting reagent</strong><br>4 mol H₂ × (2 H₂O/2 H₂) = <strong>4 mol H₂O</strong><br><br>✅ <strong>H₂ is limiting → 4 mol H₂O produced</strong>`,
-   tips:'• Limiting reagent = the one that runs out first<br>• Calculate how much of EACH reactant you need<br>• Products depend on limiting reagent, not excess'},
-];
+function eH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function gH(){sP('chat')}
+function sA(){sP('about')}
+function sW(){sP('welcome');rS()}
+function sP(n){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+n).classList.add('active')}
+function rS(){document.getElementById('subjectGrid').innerHTML=S.map(s=>`<div class="subject-chip${ss.has(s.n)?' selected':''}" onclick="tS('${s.n}',this)"><span class="icon">${s.i}</span>${s.n}</div>`).join('')}
+function tS(n,el){ss.has(n)?(ss.delete(n),el.classList.remove('selected')):(ss.add(n),el.classList.add('selected'))}
+function vS(){if(ss.size===0)ss.add('Mathematics');gH()}
+function sM(m){tm=m;document.querySelectorAll('.mode-chip').forEach(c=>c.classList.remove('active'));document.querySelector(`[data-mode="${m}"]`).classList.add('active')}
+function aM(r,h){const c=document.getElementById('chat');c.innerHTML+=`<div class="chat-msg ${r}">${h}</div>`;c.scrollTop=c.scrollHeight}
 
-// Keyword matching
-function matchProblem(text) {
-  const lower = text.toLowerCase().replace(/[^a-z0-9\s\+\-\=\(\)\^°]/g,' ').replace(/\s+/g,' ').trim();
-  let best = null, bestScore = 0;
-  for (const p of PROBLEMS) {
-    const kw = p.k.split(' ');
-    let score = 0;
-    for (const w of kw) {
-      if (lower.includes(w)) score++;
-      // Partial match for longer keywords
-      if (w.length > 3) {
-        for (let i=0;i<w.length-3;i++) {
-          if (lower.includes(w.substring(i,i+4))) { score+=0.3; break; }
-        }
-      }
-    }
-    score = score / kw.length; // normalize
-    if (score > bestScore) { bestScore = score; best = p; }
-  }
-  return bestScore >= 0.20 ? best : null;
-}
+function send(){const i=document.getElementById('msgInput'),t=i.value.trim();if(!t)return;aM('user',eH(t));i.value='';const p=M(t);if(tm==='socratic'){aM('ai',`🤔 <strong>Socratic mode:</strong> What do YOU think the answer is?<br><br>Try to work it out yourself first — I'll confirm if you're right and help if you're stuck.`)}else if(p){const h=`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${eH(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;const as=[{t:'📖 Full explainer',c:()=>oE(p),cls:'accent'},{t:'💡 Tips',c:()=>aM('ai',`<strong>💡 Tips for ${p.topic}:</strong><br><br>${p.tips}`)},{t:'🔄 Similar',c:()=>sPT('Give me another '+p.topic.split(' ')[0].toLowerCase()+' problem')}];aM('ai',h+rA(as))}else{const r=tm==='explain'?`📚 <strong>Concept Overview</strong><br><br>Try giving me a specific problem — like "solve 2x²+7x-15=0" or "a train leaves at 8am..." — and I'll walk you through it step by step.`:`I didn't find an exact match. Try:<br><br>• <strong>"Solve 2x²+7x−15=0"</strong><br>• <strong>"Factor x³−4x²−7x+10"</strong><br>• <strong>"Balance H₂+O₂→H₂O"</strong><br><br>Or snap a photo 📷!`;aM('ai',r+rA(t.length>20?[{t:'Try rephrasing',c:()=>sPT('Solve: '+t)}]:[]))}}
+function sPT(m){aM('user',m);const p=M(m);if(p){aM('ai',`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${eH(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+rA([{t:'📖 Full explainer',c:()=>oE(p),cls:'accent'},{t:'💡 Tips',c:()=>aM('ai',`<strong>Tips:</strong><br>${p.tips}`)}]))}else{aM('ai',`Let me help with that. Can you rephrase?`)}}
+function rA(as){return`<div class="action-btns">${as.map((a,i)=>`<button class="action-btn${i===0&&!a.cls?' primary':a.cls?' '+a.cls:''}" onclick="(${a.c.toString()})()">${a.t}</button>`).join('')}</div>`}
 
-// ════════════ APP LOGIC ════════════
-const SUBJECTS=[{name:'Mathematics',icon:'📐'},{name:'Physics',icon:'⚡'},{name:'Chemistry',icon:'🧪'},{name:'Biology',icon:'🧬'},{name:'History',icon:'📜'},{name:'Economics',icon:'📈'},{name:'English',icon:'📖'},{name:'Computer Science',icon:'💻'},{name:'Psychology',icon:'🧠'},{name:'Geography',icon:'🌍'},{name:'Languages',icon:'🗣️'},{name:'Law',icon:'⚖️'},{name:'Business',icon:'💼'},{name:'Sociology',icon:'👥'}];
-let selectedSubjects=new Set(['Mathematics']),tutorMode='solve',expSlides=[],expIdx=0;
+let cI=null,cw=0,ch=0,cR=null,dM=null,dS=null,dO=null,lI=null,lIO=null;const H=10;
+function pI(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const m=new Image();m.onload=()=>{cI=m;iC()};m.src=r.result};r.readAsDataURL(f);i.value=''}
+function iC(){const o=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');const mW=window.innerWidth-32,mH=window.innerHeight-180;let w=cI.width,h=cI.height;const sc=Math.min(mW/w,mH/h,1);w=Math.round(w*sc);h=Math.round(h*sc);cw=w;ch=h;cv.width=w;cv.height=h;const mg=Math.max(8,Math.round(Math.min(w,h)*.05));cR={x:mg,y:mg,w:w-mg*2,h:h-mg*2};o.classList.add('open');rC();sE()}
+function rC(){const cv=document.getElementById('cropCanvas'),ctx=cv.getContext('2d');ctx.drawImage(cI,0,0,cw,ch);if(!cR)return;ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,cw,cR.y);ctx.fillRect(0,cR.y,cR.x,cR.h);ctx.fillRect(cR.x+cR.w,cR.y,cw-cR.x-cR.w,cR.h);ctx.fillRect(0,cR.y+cR.h,cw,ch-cR.y-cR.h);ctx.strokeStyle='#F5A623';ctx.lineWidth=2;ctx.strokeRect(cR.x,cR.y,cR.w,cR.h);ctx.fillStyle='#F5A623';const h=H,cx=cR.x+cR.w/2,cy=cR.y+cR.h/2;const ps=[[cR.x,cR.y],[cx,cR.y],[cR.x+cR.w,cR.y],[cR.x+cR.w,cy],[cR.x+cR.w,cR.y+cR.h],[cx,cR.y+cR.h],[cR.x,cR.y+cR.h],[cR.x,cy]];ps.forEach(([px,py])=>{ctx.fillRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#F5A623';ctx.lineWidth=2})}
+function gHd(x,y){if(!cR)return null;const cx=cR.x+cR.w/2,cy=cR.y+cR.h/2;const ps={tl:[cR.x,cR.y],tm:[cx,cR.y],tr:[cR.x+cR.w,cR.y],mr:[cR.x+cR.w,cy],br:[cR.x+cR.w,cR.y+cR.h],bm:[cx,cR.y+cR.h],bl:[cR.x,cR.y+cR.h],ml:[cR.x,cy]};for(const[k,[px,py]]of Object.entries(ps))if(Math.abs(x-px)<=H&&Math.abs(y-py)<=H)return k;if(x>=cR.x&&x<=cR.x+cR.w&&y>=cR.y&&y<=cR.y+cR.h)return'move';return null}
+function hR(h,dx,dy){const r={...dO};if(h.includes('l')){r.x=Math.max(0,dO.x+dx);r.w=Math.max(20,dO.w-dx)}if(h.includes('r')){r.w=Math.max(20,dO.w+dx)}if(h.includes('t')){r.y=Math.max(0,dO.y+dy);r.h=Math.max(20,dO.h-dy)}if(h.includes('b')){r.h=Math.max(20,dO.h+dy)}if(r.x+r.w>cw)r.w=cw-r.x;if(r.y+r.h>ch)r.h=ch-r.y;cR=r;rC()}
+function sE(){const cv=document.getElementById('cropCanvas');cv.onpointerdown=e=>{const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const h=gHd(x,y);dS={x,y};dO=cR?{...cR}:null;if(h){dM=h}else{cR=null;dM='draw'}if(dM==='draw'){cR={x,y,w:0,h:0};rC()}cv.setPointerCapture(e.pointerId)};cv.onpointermove=e=>{if(!dM)return;const r=cv.getBoundingClientRect(),x=Math.max(0,Math.min(cw,e.clientX-r.left)),y=Math.max(0,Math.min(ch,e.clientY-r.top));const dx=x-dS.x,dy=y-dS.y;if(dM==='draw'){cR={x:Math.min(dS.x,x),y:Math.min(dS.y,y),w:Math.abs(x-dS.x),h:Math.abs(y-dS.y)}}else if(dM==='move'){let nx=dO.x+dx,ny=dO.y+dy;nx=Math.max(0,Math.min(cw-cR.w,nx));ny=Math.max(0,Math.min(ch-cR.h,ny));cR={x:nx,y:ny,w:dO.w,h:dO.h}}else{hR(dM,dx,dy)}rC()};cv.onpointerup=()=>{if(dM==='draw'&&cR&&cR.w<20)cR=null;dM=null;dS=null;dO=null;rC()}}
+function sFI(){document.getElementById('cropOverlay').classList.remove('open');const o=document.createElement('canvas');o.width=cI.width;o.height=cI.height;o.getContext('2d').drawImage(cI,0,0);lI=o.toDataURL('image/jpeg',.85);lIO=cI;aM('user',`<img src="${lI}"><div class="chat-img-label"><span class="badge badge-cam">📷 Photo</span></div>`);aP();cI=null}
+function cC(){document.getElementById('cropOverlay').classList.remove('open');cI=null;cR=null}
+function aC(){const cv=document.getElementById('cropCanvas');document.getElementById('cropOverlay').classList.remove('open');const o=document.createElement('canvas');if(cR&&cR.w>=20){const sx=cI.width/cw,sy=cI.height/ch;o.width=Math.round(cR.w*sx);o.height=Math.round(cR.h*sy);o.getContext('2d').drawImage(cI,cR.x*sx,cR.y*sy,o.width,o.height,0,0,o.width,o.height)}else{o.width=cI.width;o.height=cI.height;o.getContext('2d').drawImage(cI,0,0)}lI=o.toDataURL('image/jpeg',.85);lIO=cI;aM('user',`<img src="${lI}"><div class="chat-img-label"><span class="badge badge-cam">📷 ${cR&&cR.w<cI.width*.9?'Cropped':'Photo'}</span></div>`);aP();cI=null;cR=null}
 
-function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function goHome(){showPage('chat')}
-function showAbout(){showPage('about')}
-function showWelcome(){showPage('welcome');renderSubjects()}
-function showPage(n){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+n).classList.add('active')}
-function renderSubjects(){document.getElementById('subjectGrid').innerHTML=SUBJECTS.map(s=>`<div class="subject-chip${selectedSubjects.has(s.name)?' selected':''}" onclick="toggleSubject('${s.name}',this)"><span class="icon">${s.icon}</span>${s.name}</div>`).join('')}
-function toggleSubject(n,el){selectedSubjects.has(n)?(selectedSubjects.delete(n),el.classList.remove('selected')):(selectedSubjects.add(n),el.classList.add('selected'))}
-function saveSubjects(){if(selectedSubjects.size===0)selectedSubjects.add('Mathematics');goHome()}
-function setMode(m){tutorMode=m;document.querySelectorAll('.mode-chip').forEach(c=>c.classList.remove('active'));document.querySelector(`[data-mode="${m}"]`).classList.add('active')}
-function addMsg(role,html){const c=document.getElementById('chat');c.innerHTML+=`<div class="chat-msg ${role}">${html}</div>`;c.scrollTop=c.scrollHeight}
+const BU='http://127.0.0.1:8643',BK='ef0c...fd';
 
-function send(){
-  const input=document.getElementById('msgInput'),text=input.value.trim();
-  if(!text)return;
-  addMsg('user',escapeHtml(text));input.value='';
-  const p=matchProblem(text);
+function aP(){const t=document.getElementById('msgInput').value.trim();aM('ai',`<span class="badge badge-ai">🔍 Nano Banana 2</span> Generating solution image...`);const d=document.querySelectorAll('#chat .chat-msg.ai'),dv=d[d.length-1];const b=JSON.stringify({image:lI,text:t});fetch(BU+'/api/studyforge/solve',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':BK},body:b}).then(r=>r.json()).then(d=>{if(d.image){dv.innerHTML=`<span class="badge badge-ai">✨ Nano Banana 2 — ${d.topic||'Solved'}</span><br><br><img src="${d.image}" style="max-width:100%;border-radius:12px;display:block"><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+rA([{t:'🔄 Another',c:()=>aP()}])}else if(d.image_url){dv.innerHTML=`<span class="badge badge-ai">✨ Nano Banana 2 — ${d.topic||'Solved'}</span><br><br><img src="${BU}/api/studyforge/proxy-image?url=${encodeURIComponent(d.image_url)}" style="max-width:100%;border-radius:12px;display:block"><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`}else{dv.innerHTML=`<span class="badge badge-ai">❌ Error</span><br>${d.error||'Generation failed'}`}document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight}).catch(e=>{const p=M(t);if(p){const u=gAIF(p);dv.innerHTML=`<span class="badge badge-ai">⚠️ Offline — ${p.topic}</span><br><br><img src="${u}" style="max-width:100%;border-radius:12px;display:block"><br><em style="font-size:11px">Backend unreachable — local fallback</em>`+rA([{t:'📖 Full explainer',c:()=>oE(p),cls:'accent'},{t:'💡 Tips',c:()=>aM('ai',`<strong>Tips:</strong><br>${p.tips}`)}])}else{dv.innerHTML=`<span class="badge badge-ai">⚠️ Offline</span><br>Backend unreachable and no local match.`}document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight})}
 
-  if(tutorMode==='socratic'){
-    addMsg('ai',`🤔 <strong>Socratic mode:</strong> What do YOU think the answer is?<br><br>Try to work it out yourself first — I'll confirm if you're right and help if you're stuck.`);
-  }else if(p){
-    const html=`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
-    const actions=[{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>💡 Tips for ${p.topic}:</strong><br><br>${p.tips}`)},{t:'🔄 Similar',c:()=>sendPretyped('Give me another '+p.topic.split(' ')[0].toLowerCase()+' problem')}];
-    addMsg('ai',html+renderActions(actions));
-  }else{
-    const resp=tutorMode==='explain'
-      ?`📚 <strong>Concept Overview</strong><br><br>Try giving me a specific problem — like "solve 2x²+7x-15=0" or "a train leaves at 8am..." — and I'll walk you through it step by step.`
-      :`I didn't find an exact match for that problem. Try:<br><br>• <strong>"Solve 2x²+7x−15=0"</strong><br>• <strong>"Factor x³−4x²−7x+10"</strong><br>• <strong>"A train leaves at 8am at 60mph..."</strong><br>• <strong>"Balance H₂+O₂→H₂O"</strong><br>• <strong>"Block on 30° incline, μ=0.2"</strong><br><br>Or snap a photo 📷 of your homework!`;
-    const actions=text.length>20?[{t:'Try rephrasing',c:()=>sendPretyped('Solve: '+text)}]:[];
-    addMsg('ai',resp+renderActions(actions));
-  }
-}
+function gAIF(p){const W=800,PD=24,GP=16;const ss=p.s.split('<br><br>').filter(s=>s.includes('<strong>Step'));const st=s=>{const d=document.createElement('div');d.innerHTML=s;return d.textContent||''};const c2=document.createElement('canvas').getContext('2d');c2.font='14px -apple-system,BlinkMacSystemFont,sans-serif';const wr=(t,mw)=>{const ws=t.split(' ');let ln=[],c='';for(const w of ws){const x=c?c+' '+w:w;if(c2.measureText(x).width>mw&&c){ln.push(c);c=w}else{c=x}}if(c)ln.push(c);return ln};const tw=W-PD*2;const pl=wr(st(p.q),tw);const ph=pl.length*22+GP;let sl=[];for(const s of ss){const x=wr(st(s.replace(/<strong>Step \\d+:<\\/strong>\\s*/,'')),tw-32);sl=sl.concat(x)}const sh=ss.length*28+sl.length*22+GP;let ih=0,iy=0;if(lIO&&lIO.width){const s=Math.min((W-PD*2)/lIO.width,360/lIO.height,1);ih=Math.round(lIO.height*s);iy=PD}const th=iy+ih+GP+36+GP+ph+GP+sh+GP+24+PD;const cv=document.createElement('canvas');cv.width=W;cv.height=th;const ctx=cv.getContext('2d');ctx.fillStyle='#0F172A';ctx.fillRect(0,0,W,th);if(lIO&&lIO.width){const s=Math.min((W-PD*2)/lIO.width,360/lIO.height,1);const iw=Math.round(lIO.width*s),ih2=Math.round(lIO.height*s),ix=Math.round((W-iw)/2);ctx.fillStyle='#F5A623';ctx.fillRect(ix-2,iy-2,iw+4,ih2+4);ctx.drawImage(lIO,ix,iy,iw,ih2);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(ix,iy,100,22);ctx.fillStyle='#fff';ctx.font='11px -apple-system,sans-serif';ctx.fillText('📷 Original',ix+8,iy+15)}let y=iy+ih+GP;ctx.fillStyle='#F5A623';ctx.beginPath();ctx.roundRect(PD,y,120,24,12);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 12px -apple-system,sans-serif';ctx.fillText(p.topic,PD+10,y+16);ctx.fillStyle='#FFFFFF';ctx.font='bold 18px -apple-system,sans-serif';ctx.fillText('Step-by-Step Solution',PD+130,y+16);y+=36+GP;ctx.fillStyle='#94A3B8';ctx.font='11px -apple-system,sans-serif';ctx.fillText('PROBLEM',PD,y-4);ctx.fillStyle='#F1F5F9';ctx.font='14px -apple-system,sans-serif';for(const l of wr(st(p.q),tw)){ctx.fillText(l,PD,y+16);y+=22}y+=GP;ctx.fillStyle='#94A3B8';ctx.font='11px -apple-system,sans-serif';ctx.fillText('SOLUTION',PD,y-4);y+=4;let sn=0;for(const s of ss){sn++;ctx.fillStyle='#F5A623';ctx.beginPath();ctx.arc(PD+10,y+16,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 11px -apple-system,sans-serif';ctx.fillText(sn,PD+6.5,y+20);const sx=wr(st(s.replace(/<strong>Step \\d+:<\\/strong>\\s*/,'')),tw-32);ctx.fillStyle='#E2E8F0';ctx.font='14px -apple-system,sans-serif';for(const l of sx){ctx.fillText(l,PD+28,y+20);y+=22}y+=8}y+=GP;ctx.fillStyle='#475569';ctx.font='11px -apple-system,sans-serif';ctx.fillText('Offline fallback — connect backend for Nano Banana 2',PD,y);return cv.toDataURL('image/png')}
 
-function sendPretyped(msg){
-  addMsg('user',msg);
-  const p=matchProblem(msg);
-  if(p){
-    addMsg('ai',`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+renderActions([{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>Tips:</strong><br>${p.tips}`)}]));
-  }else{
-    addMsg('ai',`Let me help with that. Can you rephrase or give me a specific equation?`);
-  }
-}
-
-function renderActions(actions){
-  return`<div class="action-btns">${actions.map((a,i)=>`<button class="action-btn${i===0&&!a.cls?' primary':a.cls?' '+a.cls:''}" onclick="(${a.c.toString()})()">${a.t}</button>`).join('')}</div>`;
-}
-
-// ── Image pick + crop ──
-let cropImage=null,cvw=0,cvh=0,cropRect=null,dragMode=null,dragStart=null,dragOrig=null;
-const HANDLE=10;
-function pickImage(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const img=new Image();img.onload=()=>{cropImage=img;initCrop()};img.src=reader.result;
-  };
-  reader.readAsDataURL(file);input.value='';
-}
-function initCrop(){
-  const ov=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');
-  // Fit image to viewport
-  const maxW=window.innerWidth-32,maxH=window.innerHeight-180;
-  let w=cropImage.width,h=cropImage.height;
-  const scale=Math.min(maxW/w,maxH/h,1);w=Math.round(w*scale);h=Math.round(h*scale);
-  cvw=w;cvh=h;cv.width=w;cv.height=h;
-  // Start with full image as crop rect
-  const margin=Math.max(8,Math.round(Math.min(w,h)*.05));
-  cropRect={x:margin,y:margin,w:w-margin*2,h:h-margin*2};
-  ov.classList.add('open');
-  redrawCrop();
-  setupCropEvents();
-}
-function redrawCrop(){
-  const cv=document.getElementById('cropCanvas'),ctx=cv.getContext('2d');
-  ctx.drawImage(cropImage,0,0,cvw,cvh);
-  if(!cropRect)return;
-  // Dim outside
-  ctx.fillStyle='rgba(0,0,0,.45)';
-  ctx.fillRect(0,0,cvw,cropRect.y);
-  ctx.fillRect(0,cropRect.y,cropRect.x,cropRect.h);
-  ctx.fillRect(cropRect.x+cropRect.w,cropRect.y,cvw-cropRect.x-cropRect.w,cropRect.h);
-  ctx.fillRect(0,cropRect.y+cropRect.h,cvw,cvh-cropRect.y-cropRect.h);
-  // Gold border
-  ctx.strokeStyle='#F5A623';ctx.lineWidth=2;ctx.strokeRect(cropRect.x,cropRect.y,cropRect.w,cropRect.h);
-  // Handles
-  ctx.fillStyle='#F5A623';
-  const h=HANDLE,cx=cropRect.x+cropRect.w/2,cy=cropRect.y+cropRect.h/2;
-  const pts=[[cropRect.x,cropRect.y],[cx,cropRect.y],[cropRect.x+cropRect.w,cropRect.y],[cropRect.x+cropRect.w,cy],[cropRect.x+cropRect.w,cropRect.y+cropRect.h],[cx,cropRect.y+cropRect.h],[cropRect.x,cropRect.y+cropRect.h],[cropRect.x,cy]];
-  pts.forEach(([px,py])=>{ctx.fillRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#F5A623';ctx.lineWidth=2});
-}
-function getHandle(x,y){
-  if(!cropRect)return null;
-  const cx=cropRect.x+cropRect.w/2,cy=cropRect.y+cropRect.h/2;
-  const pts={tl:[cropRect.x,cropRect.y],tm:[cx,cropRect.y],tr:[cropRect.x+cropRect.w,cropRect.y],mr:[cropRect.x+cropRect.w,cy],br:[cropRect.x+cropRect.w,cropRect.y+cropRect.h],bm:[cx,cropRect.y+cropRect.h],bl:[cropRect.x,cropRect.y+cropRect.h],ml:[cropRect.x,cy]};
-  for(const[k,[px,py]]of Object.entries(pts))if(Math.abs(x-px)<=HANDLE&&Math.abs(y-py)<=HANDLE)return k;
-  if(x>=cropRect.x&&x<=cropRect.x+cropRect.w&&y>=cropRect.y&&y<=cropRect.y+cropRect.h)return'move';
-  return null;
-}
-function handleResize(handle,dx,dy){
-  const r={...dragOrig};
-  if(handle.includes('l')){r.x=Math.max(0,dragOrig.x+dx);r.w=Math.max(20,dragOrig.w-dx)}
-  if(handle.includes('r')){r.w=Math.max(20,dragOrig.w+dx)}
-  if(handle.includes('t')){r.y=Math.max(0,dragOrig.y+dy);r.h=Math.max(20,dragOrig.h-dy)}
-  if(handle.includes('b')){r.h=Math.max(20,dragOrig.h+dy)}
-  // Clamp to canvas
-  if(r.x+r.w>cvw)r.w=cvw-r.x;if(r.y+r.h>cvh)r.h=cvh-r.y;
-  cropRect=r;redrawCrop();
-}
-function setupCropEvents(){
-  const cv=document.getElementById('cropCanvas');
-  cv.onpointerdown=e=>{
-    const r=cv.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
-    const h=getHandle(x,y);dragStart={x,y};dragOrig=cropRect?{...cropRect}:null;
-    if(h){dragMode=h}else{cropRect=null;dragMode='draw'}
-    if(dragMode==='draw'){cropRect={x,y,w:0,h:0};redrawCrop()}
-    cv.setPointerCapture(e.pointerId);
-  };
-  cv.onpointermove=e=>{
-    if(!dragMode)return;
-    const r=cv.getBoundingClientRect();const x=Math.max(0,Math.min(cvw,e.clientX-r.left)),y=Math.max(0,Math.min(cvh,e.clientY-r.top));
-    const dx=x-dragStart.x,dy=y-dragStart.y;
-    if(dragMode==='draw'){
-      cropRect={x:Math.min(dragStart.x,x),y:Math.min(dragStart.y,y),w:Math.abs(x-dragStart.x),h:Math.abs(y-dragStart.y)};
-    }else if(dragMode==='move'){
-      let nx=dragOrig.x+dx,ny=dragOrig.y+dy;
-      nx=Math.max(0,Math.min(cvw-cropRect.w,nx));ny=Math.max(0,Math.min(cvh-cropRect.h,ny));
-      cropRect={x:nx,y:ny,w:dragOrig.w,h:dragOrig.h};
-    }else{handleResize(dragMode,dx,dy)}
-    redrawCrop();
-  };
-  cv.onpointerup=()=>{if(dragMode==='draw'&&cropRect&&cropRect.w<20)cropRect=null;dragMode=null;dragStart=null;dragOrig=null;redrawCrop()};
-}
-function sendFullImage(){
-  document.getElementById('cropOverlay').classList.remove('open');
-  const outCv=document.createElement('canvas');
-  outCv.width=cropImage.width;outCv.height=cropImage.height;
-  outCv.getContext('2d').drawImage(cropImage,0,0);
-  addMsg('user',`<img src="${outCv.toDataURL('image/jpeg',.85)}"><div class="chat-img-label"><span class="badge badge-cam">📷 Photo</span></div>`);
-  analyzePhoto();cropImage=null;
-}
-function cancelCrop(){document.getElementById('cropOverlay').classList.remove('open');cropImage=null;cropRect=null}
-function applyCrop(){
-  const cv=document.getElementById('cropCanvas');
-  document.getElementById('cropOverlay').classList.remove('open');
-  const outCv=document.createElement('canvas');
-  if(cropRect&&cropRect.w>=20){
-    const sx=cropImage.width/cvw,sy=cropImage.height/cvh;
-    outCv.width=Math.round(cropRect.w*sx);outCv.height=Math.round(cropRect.h*sy);
-    outCv.getContext('2d').drawImage(cropImage,cropRect.x*sx,cropRect.y*sy,outCv.width,outCv.height,0,0,outCv.width,outCv.height);
-  }else{
-    outCv.width=cropImage.width;outCv.height=cropImage.height;
-    outCv.getContext('2d').drawImage(cropImage,0,0);
-  }
-  addMsg('user',`<img src="${outCv.toDataURL('image/jpeg',.85)}"><div class="chat-img-label"><span class="badge badge-cam">📷 ${cropRect&&cropRect.w<cropImage.width*.9?'Cropped':'Photo'}</span></div>`);
-  analyzePhoto();cropImage=null;cropRect=null;
-}
-
-function analyzePhoto(){
-  // Simulates Nano Banana 2 analyzing the photo and matching to a problem
-  const p=PROBLEMS[Math.floor(Math.random()*PROBLEMS.length)];
-  addMsg('ai',`<span class="badge badge-ai">🔍 Nano Banana 2</span> Analyzing image...`);
-  const divs=document.querySelectorAll('#chat .chat-msg.ai'),div=divs[divs.length-1];
-  setTimeout(()=>{
-    div.innerHTML=`<span class="badge badge-ai">🔍 Nano Banana 2 — ${p.topic}</span><br><br><strong>📝 Detected:</strong> ${p.topic} problem<br><strong>📋 Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+renderActions([{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>Tips:</strong><br>${p.tips}`)},{t:'🔄 Another',c:()=>analyzePhoto()}]);
-    document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight;
-  },1500);
-}
-
-// ════════════ EXPLAINER ════════════
-function openExplainer(p){
-  expSlides=buildSlides(p);expIdx=0;
-  document.getElementById('expTitle').textContent=p.topic;
-  document.getElementById('expBadge').textContent='Nano Banana 2';
-  renderExpSlide();document.getElementById('explainer').classList.add('open');
-}
-function closeExplainer(){document.getElementById('explainer').classList.remove('open')}
-function expSlide(d){expIdx=Math.max(0,Math.min(expSlides.length-1,expIdx+d));renderExpSlide()}
-function renderExpSlide(){
-  document.getElementById('expBody').innerHTML=expSlides[expIdx]||'';
-  document.getElementById('expPrev').style.visibility=expIdx===0?'hidden':'';
-  document.getElementById('expNext').style.visibility=expIdx===expSlides.length-1?'hidden':'';
-  document.getElementById('expNext').textContent=expIdx===expSlides.length-1?'Done':'Next →';
-  document.getElementById('expNext').onclick=expIdx===expSlides.length-1?closeExplainer:()=>expSlide(1);
-  document.getElementById('expDots').innerHTML=expSlides.map((_,i)=>`<div class="exp-dot${i===expIdx?' active':''}" onclick="expIdx=${i};renderExpSlide()"></div>`).join('');
-}
-function buildSlides(p){
-  const steps=p.s.split('<br><br>').filter(s=>s.includes('<strong>Step'));
-  return [
-    `<h3>📋 Problem</h3><p><strong>Topic:</strong> ${p.topic}</p><p><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code></p><p>Let's work through this systematically.</p>`,
-    `<h3>🧠 Strategy</h3><p>Here's the approach:</p><div class="tip-card"><p>${p.tips.split('<br>')[0]}</p></div><p>We'll break it down into ${steps.length} clear steps.</p>`,
-    `<h3>🔢 Step-by-Step Solution</h3><div class="solution-block">${steps.map((st,i)=>`<div class="step"><div class="step-num">${i+1}</div><div>${st.replace(/<strong>Step \d+:<\/strong>\s*/,'')}</div></div>`).join('')}</div><p style="font-size:12px;color:var(--text3)">Generated by Nano Banana 2 — Higgsfield AI</p>`,
-    `<h3>💡 Tips</h3>${p.tips.split('<br>').filter(Boolean).map(t=>`<div class="tip-card"><p>${t.replace(/^[•\-]\s*/,'')}</p></div>`).join('')}`,
-    `<h3>🎯 Practice</h3><p>Try a similar problem on your own. Need another? Just ask in the chat.</p><p>Want me to check your work on this problem type? Send me your answer!</p>`
-  ];
-}
-renderSubjects();
+function oE(p){sl=bS(p);si=0;document.getElementById('expTitle').textContent=p.topic;document.getElementById('expBadge').textContent='Nano Banana 2';rSl();document.getElementById('explainer').classList.add('open')}
+function cE(){document.getElementById('explainer').classList.remove('open')}
+function eS(d){si=Math.max(0,Math.min(sl.length-1,si+d));rSl()}
+function rSl(){document.getElementById('expBody').innerHTML=sl[si]||'';document.getElementById('expPrev').style.visibility=si===0?'hidden':'';document.getElementById('expNext').style.visibility=si===sl.length-1?'hidden':'';document.getElementById('expNext').textContent=si===sl.length-1?'Done':'Next →';document.getElementById('expNext').onclick=si===sl.length-1?cE:()=>eS(1);document.getElementById('expDots').innerHTML=sl.map((_,i)=>`<div class="exp-dot${i===si?' active':''}" onclick="si=${i};rSl()"></div>`).join('')}
+function bS(p){const ss=p.s.split('<br><br>').filter(s=>s.includes('<strong>Step'));return[`<h3>📋 Problem</h3><p><strong>Topic:</strong> ${p.topic}</p><p><strong>Problem:</strong> <code>${eH(p.q)}</code></p><p>Let's work through this systematically.</p>`,`<h3>🧠 Strategy</h3><p>Here's the approach:</p><div class="tip-card"><p>${p.tips.split('<br>')[0]}</p></div><p>We'll break it down into ${ss.length} clear steps.</p>`,`<h3>🔢 Step-by-Step Solution</h3><div class="solution-block">${ss.map((st,i)=>`<div class="step"><div class="step-num">${i+1}</div><div>${st.replace(/<strong>Step \\d+:<\\/strong>\\s*/,'')}</div></div>`).join('')}</div><p style="font-size:12px;color:var(--text3)">Generated by Nano Banana 2 — Higgsfield AI</p>`,`<h3>💡 Tips</h3>${p.tips.split('<br>').filter(Boolean).map(t=>`<div class="tip-card"><p>${t.replace(/^[•\\-]\\s*/,'')}</p></div>`).join('')}`,`<h3>🎯 Practice</h3><p>Try a similar problem on your own. Need another? Just ask in the chat.</p>`]}
+rS();
 </script>
 </body>
 </html>
