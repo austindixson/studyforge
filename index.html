@@ -152,11 +152,13 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
   <div class="crop-toolbar">
     <button onclick="cancelCrop()">Cancel</button>
     <span style="font-weight:600">✂️ Crop image</span>
-    <button class="primary" onclick="applyCrop()">Crop & Send →</button>
+    <button class="primary" onclick="sendFullImage()">Skip →</button>
   </div>
   <div class="crop-canvas-wrap">
     <canvas id="cropCanvas"></canvas>
-    <div class="crop-hint" id="cropHint">Drag to select the problem area</div>
+  </div>
+  <div class="crop-toolbar" style="justify-content:center;border-top:none;padding-top:0">
+    <button class="primary" onclick="applyCrop()">Crop & Send →</button>
   </div>
 </div>
 </div>
@@ -311,58 +313,113 @@ function renderActions(actions){
 }
 
 // ── Image pick + crop ──
-let cropImage=null,cropDataUrl=null,cropRect=null;
+let cropImage=null,cvw=0,cvh=0,cropRect=null,dragMode=null,dragStart=null,dragOrig=null;
+const HANDLE=10;
 function pickImage(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=()=>{
-    cropDataUrl=reader.result;cropRect=null;
-    const img=new Image();img.onload=()=>{cropImage=img;startCrop()};img.src=cropDataUrl;
+    const img=new Image();img.onload=()=>{cropImage=img;initCrop()};img.src=reader.result;
   };
   reader.readAsDataURL(file);input.value='';
 }
-function startCrop(){
+function initCrop(){
   const ov=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');
-  ov.classList.add('open');document.getElementById('cropHint').style.display='';
   // Fit image to viewport
-  const maxW=window.innerWidth-32,maxH=window.innerHeight-120;
+  const maxW=window.innerWidth-32,maxH=window.innerHeight-180;
   let w=cropImage.width,h=cropImage.height;
-  const scale=Math.min(maxW/w,maxH/h,1);w*=scale;h*=scale;
-  cv.width=w;cv.height=h;
-  const ctx=cv.getContext('2d');ctx.drawImage(cropImage,0,0,w,h);
-  // Drag to crop
-  let sx,sy,drawing=false;
-  cv.onpointerdown=e=>{const r=cv.getBoundingClientRect();sx=e.clientX-r.left;sy=e.clientY-r.top;drawing=true;cropRect=null;document.getElementById('cropHint').style.display='none'};
-  cv.onpointermove=e=>{if(!drawing)return;const r=cv.getBoundingClientRect();let x=e.clientX-r.left,y=e.clientY-r.top;
-    x=Math.max(0,Math.min(w,x));y=Math.max(0,Math.min(h,y));
-    cropRect={x:Math.min(sx,x),y:Math.min(sy,y),w:Math.abs(x-sx),h:Math.abs(y-sy)};
-    ctx.drawImage(cropImage,0,0,w,h);
-    ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(0,0,w,h);
-    ctx.clearRect(cropRect.x,cropRect.y,cropRect.w,cropRect.h);
-    ctx.strokeStyle='#F5A623';ctx.lineWidth=2;ctx.strokeRect(cropRect.x,cropRect.y,cropRect.w,cropRect.h);
-  };
-  cv.onpointerup=()=>{drawing=false;if(!cropRect||cropRect.w<20||cropRect.h<20){cropRect=null;ctx.drawImage(cropImage,0,0,w,h);document.getElementById('cropHint').style.display=''}};
-  document.getElementById('cropHint').textContent='Drag to select the problem area';
+  const scale=Math.min(maxW/w,maxH/h,1);w=Math.round(w*scale);h=Math.round(h*scale);
+  cvw=w;cvh=h;cv.width=w;cv.height=h;
+  // Start with full image as crop rect
+  const margin=Math.max(8,Math.round(Math.min(w,h)*.05));
+  cropRect={x:margin,y:margin,w:w-margin*2,h:h-margin*2};
+  ov.classList.add('open');
+  redrawCrop();
+  setupCropEvents();
 }
-function cancelCrop(){document.getElementById('cropOverlay').classList.remove('open');cropImage=null;cropDataUrl=null;cropRect=null}
+function redrawCrop(){
+  const cv=document.getElementById('cropCanvas'),ctx=cv.getContext('2d');
+  ctx.drawImage(cropImage,0,0,cvw,cvh);
+  if(!cropRect)return;
+  // Dim outside
+  ctx.fillStyle='rgba(0,0,0,.45)';
+  ctx.fillRect(0,0,cvw,cropRect.y);
+  ctx.fillRect(0,cropRect.y,cropRect.x,cropRect.h);
+  ctx.fillRect(cropRect.x+cropRect.w,cropRect.y,cvw-cropRect.x-cropRect.w,cropRect.h);
+  ctx.fillRect(0,cropRect.y+cropRect.h,cvw,cvh-cropRect.y-cropRect.h);
+  // Gold border
+  ctx.strokeStyle='#F5A623';ctx.lineWidth=2;ctx.strokeRect(cropRect.x,cropRect.y,cropRect.w,cropRect.h);
+  // Handles
+  ctx.fillStyle='#F5A623';
+  const h=HANDLE,cx=cropRect.x+cropRect.w/2,cy=cropRect.y+cropRect.h/2;
+  const pts=[[cropRect.x,cropRect.y],[cx,cropRect.y],[cropRect.x+cropRect.w,cropRect.y],[cropRect.x+cropRect.w,cy],[cropRect.x+cropRect.w,cropRect.y+cropRect.h],[cx,cropRect.y+cropRect.h],[cropRect.x,cropRect.y+cropRect.h],[cropRect.x,cy]];
+  pts.forEach(([px,py])=>{ctx.fillRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#F5A623';ctx.lineWidth=2});
+}
+function getHandle(x,y){
+  if(!cropRect)return null;
+  const cx=cropRect.x+cropRect.w/2,cy=cropRect.y+cropRect.h/2;
+  const pts={tl:[cropRect.x,cropRect.y],tm:[cx,cropRect.y],tr:[cropRect.x+cropRect.w,cropRect.y],mr:[cropRect.x+cropRect.w,cy],br:[cropRect.x+cropRect.w,cropRect.y+cropRect.h],bm:[cx,cropRect.y+cropRect.h],bl:[cropRect.x,cropRect.y+cropRect.h],ml:[cropRect.x,cy]};
+  for(const[k,[px,py]]of Object.entries(pts))if(Math.abs(x-px)<=HANDLE&&Math.abs(y-py)<=HANDLE)return k;
+  if(x>=cropRect.x&&x<=cropRect.x+cropRect.w&&y>=cropRect.y&&y<=cropRect.y+cropRect.h)return'move';
+  return null;
+}
+function handleResize(handle,dx,dy){
+  const r={...dragOrig};
+  if(handle.includes('l')){r.x=Math.max(0,dragOrig.x+dx);r.w=Math.max(20,dragOrig.w-dx)}
+  if(handle.includes('r')){r.w=Math.max(20,dragOrig.w+dx)}
+  if(handle.includes('t')){r.y=Math.max(0,dragOrig.y+dy);r.h=Math.max(20,dragOrig.h-dy)}
+  if(handle.includes('b')){r.h=Math.max(20,dragOrig.h+dy)}
+  // Clamp to canvas
+  if(r.x+r.w>cvw)r.w=cvw-r.x;if(r.y+r.h>cvh)r.h=cvh-r.y;
+  cropRect=r;redrawCrop();
+}
+function setupCropEvents(){
+  const cv=document.getElementById('cropCanvas');
+  cv.onpointerdown=e=>{
+    const r=cv.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
+    const h=getHandle(x,y);dragStart={x,y};dragOrig=cropRect?{...cropRect}:null;
+    if(h){dragMode=h}else{cropRect=null;dragMode='draw'}
+    if(dragMode==='draw'){cropRect={x,y,w:0,h:0};redrawCrop()}
+    cv.setPointerCapture(e.pointerId);
+  };
+  cv.onpointermove=e=>{
+    if(!dragMode)return;
+    const r=cv.getBoundingClientRect();const x=Math.max(0,Math.min(cvw,e.clientX-r.left)),y=Math.max(0,Math.min(cvh,e.clientY-r.top));
+    const dx=x-dragStart.x,dy=y-dragStart.y;
+    if(dragMode==='draw'){
+      cropRect={x:Math.min(dragStart.x,x),y:Math.min(dragStart.y,y),w:Math.abs(x-dragStart.x),h:Math.abs(y-dragStart.y)};
+    }else if(dragMode==='move'){
+      let nx=dragOrig.x+dx,ny=dragOrig.y+dy;
+      nx=Math.max(0,Math.min(cvw-cropRect.w,nx));ny=Math.max(0,Math.min(cvh-cropRect.h,ny));
+      cropRect={x:nx,y:ny,w:dragOrig.w,h:dragOrig.h};
+    }else{handleResize(dragMode,dx,dy)}
+    redrawCrop();
+  };
+  cv.onpointerup=()=>{if(dragMode==='draw'&&cropRect&&cropRect.w<20)cropRect=null;dragMode=null;dragStart=null;dragOrig=null;redrawCrop()};
+}
+function sendFullImage(){
+  document.getElementById('cropOverlay').classList.remove('open');
+  const outCv=document.createElement('canvas');
+  outCv.width=cropImage.width;outCv.height=cropImage.height;
+  outCv.getContext('2d').drawImage(cropImage,0,0);
+  addMsg('user',`<img src="${outCv.toDataURL('image/jpeg',.85)}"><div class="chat-img-label"><span class="badge badge-cam">📷 Photo</span></div>`);
+  analyzePhoto();cropImage=null;
+}
+function cancelCrop(){document.getElementById('cropOverlay').classList.remove('open');cropImage=null;cropRect=null}
 function applyCrop(){
-  const ov=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');
-  ov.classList.remove('open');
-  // Create cropped image
+  const cv=document.getElementById('cropCanvas');
+  document.getElementById('cropOverlay').classList.remove('open');
   const outCv=document.createElement('canvas');
   if(cropRect&&cropRect.w>=20){
-    const scaleX=cropImage.width/cv.width,scaleY=cropImage.height/cv.height;
-    outCv.width=Math.round(cropRect.w*scaleX);outCv.height=Math.round(cropRect.h*scaleY);
-    const ctx=outCv.getContext('2d');
-    ctx.drawImage(cropImage,cropRect.x*scaleX,cropRect.y*scaleY,outCv.width,outCv.height,0,0,outCv.width,outCv.height);
+    const sx=cropImage.width/cvw,sy=cropImage.height/cvh;
+    outCv.width=Math.round(cropRect.w*sx);outCv.height=Math.round(cropRect.h*sy);
+    outCv.getContext('2d').drawImage(cropImage,cropRect.x*sx,cropRect.y*sy,outCv.width,outCv.height,0,0,outCv.width,outCv.height);
   }else{
     outCv.width=cropImage.width;outCv.height=cropImage.height;
     outCv.getContext('2d').drawImage(cropImage,0,0);
   }
-  const cropped=outCv.toDataURL('image/jpeg',.85);
-  addMsg('user',`<img src="${cropped}"><div class="chat-img-label"><span class="badge badge-cam">📷 ${cropRect?'Cropped':'Photo'}</span></div>`);
-  analyzePhoto();
-  cropImage=null;cropDataUrl=null;cropRect=null;
+  addMsg('user',`<img src="${outCv.toDataURL('image/jpeg',.85)}"><div class="chat-img-label"><span class="badge badge-cam">📷 ${cropRect&&cropRect.w<cropImage.width*.9?'Cropped':'Photo'}</span></div>`);
+  analyzePhoto();cropImage=null;cropRect=null;
 }
 
 function analyzePhoto(){
