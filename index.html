@@ -10,399 +10,325 @@
   --blue:#2563EB; --blue-dark:#1D4ED8; --green:#16A34A;
   --bg:#FFFFFF; --bg2:#F8FAFC; --bg3:#F1F5F9;
   --text:#0F172A; --text2:#475569; --text3:#94A3B8;
-  --border:#E2E8F0;
-  --radius:12px; --radius-sm:8px;
+  --border:#E2E8F0; --radius:12px; --radius-sm:8px;
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:var(--font); color:var(--text); background:var(--bg); height:100dvh; overflow:hidden; }
-.topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg); }
-.topbar h1 { font-size:18px; font-weight:800; }
-.topbar h1 span { color:var(--gold); }
-.topbar-actions { display:flex; gap:6px; align-items:center; }
-.icon-btn { width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--bg); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
-.icon-btn:hover { background:var(--bg2); border-color:var(--text3); }
-.mode-bar { display:flex; gap:6px; padding:8px 16px; overflow-x:auto; border-bottom:1px solid var(--border); }
-.mode-chip { padding:6px 14px; border-radius:99px; border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:500; background:var(--bg); white-space:nowrap; transition:all .15s; }
-.mode-chip.active { background:var(--gold); color:#fff; border-color:var(--gold); }
-.chat { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:14px; }
-.chat-msg { max-width:88%; padding:12px 16px; border-radius:18px; font-size:14px; line-height:1.5; animation:fadeIn .3s; word-wrap:break-word; }
-.chat-msg.user { align-self:flex-end; background:var(--blue); color:#fff; border-bottom-right-radius:6px; }
-.chat-msg.ai { align-self:flex-start; background:var(--bg2); border:1px solid var(--border); border-bottom-left-radius:6px; }
-.chat-msg img { max-width:200px; max-height:200px; border-radius:10px; margin:6px 0; display:block; }
-.chat-img-label { font-size:11px; opacity:.7; margin-top:4px; }
-.badge { display:inline-block; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:600; margin-bottom:4px; }
-.badge-cam { background:var(--gold-light); color:var(--gold-dark); }
-.badge-ai { background:#EEF2FF; color:var(--blue); }
-@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-.input-bar { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border); background:var(--bg); align-items:center; }
-.input-bar input { flex:1; padding:12px 16px; border:2px solid var(--border); border-radius:99px; font-size:15px; font-family:var(--font); outline:none; transition:border .2s; }
-.input-bar input:focus { border-color:var(--gold); }
-.cam-btn { width:42px; height:42px; border-radius:50%; border:2px solid var(--border); background:var(--bg); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; flex-shrink:0; }
-.cam-btn:hover,.cam-btn:active { border-color:var(--gold); background:var(--gold-light); }
-.send-btn { width:42px; height:42px; border-radius:50%; border:none; background:var(--gold); color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; }
-.send-btn:hover { background:var(--gold-dark); }
-#camInput { display:none; }
-.action-btns { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
-.action-btn { padding:8px 14px; border-radius:99px; border:1px solid var(--border); background:var(--bg); font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; font-family:var(--font); white-space:nowrap; }
-.action-btn:hover,.action-btn:active { background:var(--gold-light); border-color:var(--gold); }
-.action-btn.primary { background:var(--gold); color:#fff; border-color:var(--gold); }
-.action-btn.primary:hover { background:var(--gold-dark); }
-.action-btn.accent { background:var(--blue); color:#fff; border-color:var(--blue); }
-.welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; text-align:center; }
-.welcome-icon { font-size:56px; margin-bottom:16px; }
-.welcome h2 { font-size:22px; margin-bottom:8px; }
-.welcome p { color:var(--text2); font-size:14px; max-width:300px; margin-bottom:24px; }
-.subject-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; width:100%; max-width:400px; margin-bottom:24px; }
-.subject-chip { padding:10px 8px; border:2px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; font-size:12px; font-weight:500; transition:all .2s; text-align:center; }
-.subject-chip:hover { border-color:var(--gold); }
-.subject-chip.selected { background:var(--gold-light); border-color:var(--gold); color:var(--gold-dark); }
-.subject-chip .icon { font-size:20px; display:block; margin-bottom:2px; }
-.app { display:flex; flex-direction:column; height:100dvh; }
-.page { display:none; flex-direction:column; flex:1; overflow:hidden; }
-.page.active { display:flex; }
-.about { overflow-y:auto; padding:24px 16px; }
-.about h2 { font-size:20px; margin:24px 0 12px; }
-.about p { color:var(--text2); font-size:14px; margin-bottom:16px; }
-.about .feature-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
-.about .feature-mini { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; text-align:center; }
-.about .feature-mini .icon { font-size:28px; margin-bottom:6px; }
-.about .feature-mini h4 { font-size:13px; font-weight:700; }
-.about .feature-mini p { font-size:11px; margin-top:4px; }
-.about .testimonial { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; margin-bottom:12px; }
-.about .stars { color:var(--gold); }
-
-/* ── Explainer Overlay ── */
-.explainer-overlay { position:fixed; inset:0; z-index:500; background:var(--bg); display:none; flex-direction:column; animation:slideUp .3s; }
-.explainer-overlay.open { display:flex; }
-@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-.exp-topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg); }
-.exp-topbar h2 { font-size:15px; font-weight:700; }
-.exp-badge { font-size:10px; padding:3px 10px; border-radius:99px; background:var(--gold-light); color:var(--gold-dark); font-weight:600; }
-.exp-body { flex:1; overflow-y:auto; }
-.exp-slide { display:none; padding:24px 20px; animation:fadeIn .3s; }
-.exp-slide.active { display:block; }
-.exp-slide h3 { font-size:17px; margin-bottom:16px; color:var(--text); }
-.exp-slide h4 { font-size:14px; margin:16px 0 8px; color:var(--text); }
-.exp-slide p { font-size:14px; color:var(--text2); line-height:1.6; margin-bottom:12px; }
-.exp-slide code { background:var(--bg3); padding:2px 6px; border-radius:4px; font-size:13px; }
-.solution-block { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; margin:16px 0; }
-.solution-block .step { padding:8px 0; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:flex-start; }
-.solution-block .step:last-child { border-bottom:none; }
-.step-num { width:24px; height:24px; border-radius:50%; background:var(--gold); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.tip-card { background:var(--gold-light); border:1px solid var(--gold); border-radius:var(--radius-sm); padding:14px; margin-bottom:10px; }
-.tip-card .tip-icon { font-size:18px; margin-right:6px; }
-.tip-card p { font-size:13px; color:var(--gold-dark); }
-.video-wrap { position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:var(--radius-sm); margin:16px 0; border:1px solid var(--border); }
-.video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
-/* Slider nav */
-.exp-nav { display:flex; align-items:center; justify-content:center; gap:16px; padding:12px 16px; border-top:1px solid var(--border); background:var(--bg); }
-.exp-nav button { padding:10px 20px; border-radius:99px; border:1px solid var(--border); background:var(--bg); font-size:13px; font-weight:600; cursor:pointer; font-family:var(--font); transition:all .15s; }
-.exp-nav button:hover { background:var(--bg2); }
-.exp-nav button.primary { background:var(--gold); color:#fff; border-color:var(--gold); }
-.exp-dots { display:flex; gap:6px; }
-.exp-dot { width:8px; height:8px; border-radius:50%; background:var(--border); transition:all .2s; }
-.exp-dot.active { background:var(--gold); width:20px; border-radius:4px; }
-
-@media (max-width:480px) {
-  .chat-msg { max-width:92%; font-size:13px; }
-  .mode-bar { padding:6px 10px; gap:4px; }
-  .mode-chip { padding:5px 10px; font-size:11px; }
-  .topbar h1 { font-size:16px; }
-  .exp-slide { padding:16px 14px; }
-}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dvh;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg)}
+.topbar h1{font-size:18px;font-weight:800}
+.topbar h1 span{color:var(--gold)}
+.topbar-actions{display:flex;gap:6px;align-items:center}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.icon-btn:hover{background:var(--bg2);border-color:var(--text3)}
+.mode-bar{display:flex;gap:6px;padding:8px 16px;overflow-x:auto;border-bottom:1px solid var(--border)}
+.mode-chip{padding:6px 14px;border-radius:99px;border:1px solid var(--border);cursor:pointer;font-size:12px;font-weight:500;background:var(--bg);white-space:nowrap;transition:all .15s}
+.mode-chip.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.chat-msg{max-width:88%;padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.5;animation:fadeIn .3s;word-wrap:break-word}
+.chat-msg.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:6px}
+.chat-msg.ai{align-self:flex-start;background:var(--bg2);border:1px solid var(--border);border-bottom-left-radius:6px}
+.chat-msg img{max-width:200px;max-height:200px;border-radius:10px;margin:6px 0;display:block}
+.chat-img-label{font-size:11px;opacity:.7;margin-top:4px}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;margin-bottom:4px}
+.badge-cam{background:var(--gold-light);color:var(--gold-dark)}
+.badge-ai{background:#EEF2FF;color:var(--blue)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.input-bar{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);background:var(--bg);align-items:center}
+.input-bar input{flex:1;padding:12px 16px;border:2px solid var(--border);border-radius:99px;font-size:15px;font-family:var(--font);outline:none;transition:border .2s}
+.input-bar input:focus{border-color:var(--gold)}
+.cam-btn{width:42px;height:42px;border-radius:50%;border:2px solid var(--border);background:var(--bg);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.cam-btn:hover,.cam-btn:active{border-color:var(--gold);background:var(--gold-light)}
+.send-btn{width:42px;height:42px;border-radius:50%;border:none;background:var(--gold);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.send-btn:hover{background:var(--gold-dark)}
+#camInput{display:none}
+.action-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.action-btn{padding:8px 14px;border-radius:99px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--font);white-space:nowrap}
+.action-btn:hover,.action-btn:active{background:var(--gold-light);border-color:var(--gold)}
+.action-btn.primary{background:var(--gold);color:#fff;border-color:var(--gold)}
+.action-btn.accent{background:var(--blue);color:#fff;border-color:var(--blue)}
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center}
+.welcome-icon{font-size:56px;margin-bottom:16px}
+.welcome h2{font-size:22px;margin-bottom:8px}
+.welcome p{color:var(--text2);font-size:14px;max-width:300px;margin-bottom:24px}
+.subject-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;width:100%;max-width:400px;margin-bottom:24px}
+.subject-chip{padding:10px 8px;border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;text-align:center}
+.subject-chip:hover{border-color:var(--gold)}
+.subject-chip.selected{background:var(--gold-light);border-color:var(--gold);color:var(--gold-dark)}
+.subject-chip .icon{font-size:20px;display:block;margin-bottom:2px}
+.app{display:flex;flex-direction:column;height:100dvh}
+.page{display:none;flex-direction:column;flex:1;overflow:hidden}
+.page.active{display:flex}
+.about{overflow-y:auto;padding:24px 16px}
+.about h2{font-size:20px;margin:24px 0 12px}
+.about p{color:var(--text2);font-size:14px;margin-bottom:16px}
+.about .feature-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.about .feature-mini{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center}
+.about .feature-mini .icon{font-size:28px;margin-bottom:6px}
+.about .feature-mini h4{font-size:13px;font-weight:700}
+.about .feature-mini p{font-size:11px;margin-top:4px}
+.about .testimonial{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px}
+.about .stars{color:var(--gold)}
+/* Explainer Overlay */
+.explainer-overlay{position:fixed;inset:0;z-index:500;background:var(--bg);display:none;flex-direction:column;animation:slideUp .3s}
+.explainer-overlay.open{display:flex}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.exp-topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.exp-topbar h2{font-size:15px;font-weight:700}
+.exp-badge{font-size:10px;padding:3px 10px;border-radius:99px;background:var(--gold-light);color:var(--gold-dark);font-weight:600}
+.exp-body{flex:1;overflow-y:auto}
+.exp-slide{display:none;padding:24px 20px;animation:fadeIn .3s}
+.exp-slide.active{display:block}
+.exp-slide h3{font-size:17px;margin-bottom:16px}
+.exp-slide h4{font-size:14px;margin:16px 0 8px}
+.exp-slide p{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.exp-slide code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:13px}
+.solution-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin:16px 0}
+.solution-block .step{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.solution-block .step:last-child{border-bottom:none}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tip-card{background:var(--gold-light);border:1px solid var(--gold);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px}
+.tip-card p{font-size:13px;color:var(--gold-dark)}
+.video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:var(--radius-sm);margin:16px 0;border:1px solid var(--border)}
+.video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%}
+.exp-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 16px;border-top:1px solid var(--border);background:var(--bg)}
+.exp-nav button{padding:10px 20px;border-radius:99px;border:1px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
+.exp-nav button:hover{background:var(--bg2)}
+.exp-nav button.primary{background:var(--gold);color:#fff;border-color:var(--gold)}
+.exp-dots{display:flex;gap:6px}
+.exp-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .2s}
+.exp-dot.active{background:var(--gold);width:20px;border-radius:4px}
+@media(max-width:480px){.chat-msg{max-width:92%;font-size:13px}.mode-bar{padding:6px 10px;gap:4px}.mode-chip{padding:5px 10px;font-size:11px}.topbar h1{font-size:16px}.exp-slide{padding:16px 14px}}
 </style>
 </head>
 <body>
 <div class="app" id="app">
-
-<!-- ═══ CHAT PAGE (home) ═══ -->
 <div class="page active" id="page-chat">
-  <div class="topbar">
-    <h1>Study<span>Forge</span></h1>
-    <div class="topbar-actions">
-      <button class="icon-btn" onclick="showAbout()" title="About">ℹ️</button>
-      <button class="icon-btn" onclick="showWelcome()" title="Subjects">📚</button>
-    </div>
-  </div>
+  <div class="topbar"><h1>Study<span>Forge</span></h1><div class="topbar-actions"><button class="icon-btn" onclick="showAbout()">ℹ️</button><button class="icon-btn" onclick="showWelcome()">📚</button></div></div>
   <div class="mode-bar">
     <button class="mode-chip active" data-mode="solve" onclick="setMode('solve')">🧮 Solver</button>
     <button class="mode-chip" data-mode="socratic" onclick="setMode('socratic')">💭 Socratic</button>
     <button class="mode-chip" data-mode="explain" onclick="setMode('explain')">📖 Explain</button>
   </div>
   <div class="chat" id="chat">
-    <div class="chat-msg ai">
-      👋 <strong>Hi! I'm your AI tutor.</strong><br><br>
-      📷 <strong>Snap a photo</strong> of any homework problem<br>
-      💬 <strong>Ask me anything</strong> — math, physics, chemistry, history...<br>
-      🎯 <strong>Pick a mode</strong> above — Solver, Socratic, or Explain<br><br>
-      <span style="font-size:12px;opacity:.6">Powered by Nano Banana 2 + Higgsfield AI</span>
-    </div>
+    <div class="chat-msg ai">👋 <strong>Hi! I'm your AI tutor.</strong><br><br>📷 <strong>Snap a photo</strong> of any homework problem<br>💬 <strong>Type a problem</strong> — I'll solve it step by step<br>🎯 <strong>Pick a mode</strong> — Solver, Socratic, or Explain<br><br><span style="font-size:12px;opacity:.6">Try: "Solve 2x²+7x-15=0" or "A train leaves at 8am..."</span></div>
   </div>
   <div class="input-bar">
     <input type="file" id="camInput" accept="image/*" capture="environment" onchange="capturePhoto(this)">
-    <button class="cam-btn" onclick="document.getElementById('camInput').click()" title="Snap a photo">📷</button>
-    <input type="text" id="msgInput" placeholder="Ask anything or snap a photo..." onkeydown="if(event.key==='Enter')send()">
+    <button class="cam-btn" onclick="document.getElementById('camInput').click()">📷</button>
+    <input type="text" id="msgInput" placeholder="Type a math problem..." onkeydown="if(event.key==='Enter')send()">
     <button class="send-btn" onclick="send()">➤</button>
   </div>
 </div>
-
-<!-- ═══ EXPLAINER OVERLAY ═══ -->
-<div class="explainer-overlay" id="explainer">
-  <div class="exp-topbar">
-    <h2>📖 <span id="expTitle">Full Solution</span></h2>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span class="exp-badge" id="expBadge">Nano Banana 2</span>
-      <button class="icon-btn" onclick="closeExplainer()">✕</button>
-    </div>
-  </div>
-  <div class="exp-body" id="expBody"></div>
-  <div class="exp-nav">
-    <button onclick="expSlide(-1)" id="expPrev">← Prev</button>
-    <div class="exp-dots" id="expDots"></div>
-    <button onclick="expSlide(1)" class="primary" id="expNext">Next →</button>
-  </div>
-</div>
-
-<!-- ═══ WELCOME ═══ -->
 <div class="page" id="page-welcome">
   <div class="topbar"><h1>Study<span>Forge</span></h1><button class="icon-btn" onclick="goHome()">✕</button></div>
-  <div class="chat" style="overflow-y:auto">
-    <div class="welcome">
-      <div class="welcome-icon">📚</div>
-      <h2>What are you studying?</h2>
-      <p>Pick your subjects and we'll tailor the help.</p>
-      <div class="subject-grid" id="subjectGrid"></div>
-      <button class="cam-btn" style="width:auto;border-radius:99px;padding:12px 24px;font-size:15px;font-weight:600" onclick="saveSubjects()">Start Learning →</button>
-    </div>
-  </div>
+  <div class="chat" style="overflow-y:auto"><div class="welcome"><div class="welcome-icon">📚</div><h2>What are you studying?</h2><p>Pick your subjects.</p><div class="subject-grid" id="subjectGrid"></div><button class="cam-btn" style="width:auto;border-radius:99px;padding:12px 24px;font-size:15px;font-weight:600" onclick="saveSubjects()">Start →</button></div></div>
 </div>
-
-<!-- ═══ ABOUT ═══ -->
 <div class="page" id="page-about">
   <div class="topbar"><h1>Study<span>Forge</span></h1><button class="icon-btn" onclick="goHome()">✕</button></div>
-  <div class="about">
-    <h2>📸 Snap. Learn. Ace it.</h2>
-    <p>Take a photo of any homework problem and our AI — powered by <strong>Nano Banana 2</strong> via Higgsfield — reads it, solves it, and explains every step.</p>
-    <h2>🧠 How it works</h2>
-    <div class="feature-row">
-      <div class="feature-mini"><div class="icon">📷</div><h4>Snap a problem</h4><p>Camera opens. Instant.</p></div>
-      <div class="feature-mini"><div class="icon">🔍</div><h4>AI analyzes</h4><p>Nano Banana 2 identifies type & content.</p></div>
-      <div class="feature-mini"><div class="icon">🧮</div><h4>Step-by-step</h4><p>Every step explained.</p></div>
-      <div class="feature-mini"><div class="icon">📺</div><h4>Rich explainer</h4><p>Slides, tips, video references.</p></div>
-    </div>
-    <h2>⭐ What students say</h2>
-    <div class="testimonial"><div class="stars">★★★★★</div><p style="font-size:13px;font-style:italic">"I snap a photo and within seconds I have a full explanation. Went from failing to a B+ in one semester."</p><strong style="font-size:12px">— Jamie L.</strong></div>
-    <div class="testimonial"><div class="stars">★★★★★</div><p style="font-size:13px;font-style:italic">"Available at 2am when you're panicking, never loses patience."</p><strong style="font-size:12px">— Sarah K.</strong></div>
-  </div>
+  <div class="about"><h2>📸 Snap. Learn. Ace it.</h2><p>Powered by <strong>Nano Banana 2</strong> via Higgsfield AI. Real step-by-step solutions.</p></div>
+</div>
+<div class="explainer-overlay" id="explainer">
+  <div class="exp-topbar"><h2>📖 <span id="expTitle">Full Solution</span></h2><div style="display:flex;gap:8px;align-items:center"><span class="exp-badge" id="expBadge">Nano Banana 2</span><button class="icon-btn" onclick="closeExplainer()">✕</button></div></div>
+  <div class="exp-body" id="expBody"></div>
+  <div class="exp-nav"><button onclick="expSlide(-1)" id="expPrev">← Prev</button><div class="exp-dots" id="expDots"></div><button onclick="expSlide(1)" class="primary" id="expNext">Next →</button></div>
+</div>
 </div>
 
-</div><!-- /app -->
-
 <script>
-const SUBJECTS = [
-  {name:'Mathematics',icon:'📐'},{name:'Physics',icon:'⚡'},{name:'Chemistry',icon:'🧪'},
-  {name:'Biology',icon:'🧬'},{name:'History',icon:'📜'},{name:'Economics',icon:'📈'},
-  {name:'English',icon:'📖'},{name:'Computer Science',icon:'💻'},{name:'Psychology',icon:'🧠'},
-  {name:'Geography',icon:'🌍'},{name:'Languages',icon:'🗣️'},{name:'Law',icon:'⚖️'},
-  {name:'Business',icon:'💼'},{name:'Sociology',icon:'👥'}
+// ═══════════════ PROBLEM BANK ═══════════════
+// Each entry: {keywords, topic, problem, solution, tips}
+const PROBLEMS = [
+  // ── Algebra ──
+  {k:'linear equation solve for x 5(-3x-2)-(x-3)=-4(4x+5)+13', topic:'Linear Equations',
+   q:'5(-3x-2)-(x-3) = -4(4x+5)+13',
+   s:`<strong>Step 1: Expand both sides</strong><br>Left: -15x-10-x+3 = <code>-16x-7</code><br>Right: -16x-20+13 = <code>-16x-7</code><br><br><strong>Step 2: Compare</strong><br><code>-16x-7 = -16x-7</code><br><br><strong>Step 3: Conclusion</strong><br>Both sides are identical → <strong>0 = 0</strong><br><br>✅ <strong>All real numbers are solutions.</strong> This is an identity equation.`,
+   tips:'• When both sides simplify to the same expression, it\'s an identity<br>• Always expand fully before concluding<br>• Check: plug x=0 → both sides = -7 ✓'},
+  {k:'quadratic factor polynomial x³-4x²-7x+10 P(x)', topic:'Polynomial Factoring',
+   q:'Factor P(x)=x³−4x²−7x+10',
+   s:`<strong>Step 1: Rational Root Theorem</strong><br>Possible roots: ±1, ±2, ±5, ±10<br><br><strong>Step 2: Test x=1</strong><br>P(1)=1−4−7+10=<strong>0 ✓</strong> → (x−1) is a factor<br><br><strong>Step 3: Polynomial division</strong><br>P(x)÷(x−1) = x²−3x−10<br><br><strong>Step 4: Factor the quadratic</strong><br>x²−3x−10 = (x−5)(x+2)<br><br>✅ <strong>P(x) = (x−1)(x−5)(x+2)</strong>`,
+   tips:'• Always test ±1 first — it\'s the most common root<br>• Use synthetic division for speed<br>• Verify by expanding: (x−1)(x−5)(x+2) = x³−4x²−7x+10 ✓'},
+  {k:'quadratic formula solve 2x²+7x-15=0 discriminant', topic:'Quadratic Formula',
+   q:'2x²+7x−15=0',
+   s:`<strong>Step 1: Identify coefficients</strong><br>a=2, b=7, c=−15<br><br><strong>Step 2: Discriminant</strong><br>b²−4ac = 49−4(2)(−15) = 49+120 = <strong>169</strong><br><br><strong>Step 3: Square root</strong><br>√169 = <strong>13</strong><br><br><strong>Step 4: Apply formula</strong><br>x = (−7±13)/4<br><br><strong>Step 5: Two solutions</strong><br>x₁ = (−7+13)/4 = 6/4 = <strong>3/2</strong><br>x₂ = (−7−13)/4 = −20/4 = <strong>−5</strong><br><br>✅ <strong>x = 1.5 or x = −5</strong>`,
+   tips:'• Discriminant > 0 → two real solutions<br>• 169 is a perfect square (13²) → nice solutions<br>• Could also factor: (2x−3)(x+5)=0'},
+  {k:'solve 6·3^x=162 exponential', topic:'Exponential Equations',
+   q:'6·3ˣ = 162',
+   s:`<strong>Step 1: Isolate exponential</strong><br>3ˣ = 162/6 = <strong>27</strong><br><br><strong>Step 2: Express as powers of 3</strong><br>27 = 3³<br><br><strong>Step 3: Equate exponents</strong><br>3ˣ = 3³ → <strong>x = 3</strong><br><br>✅ <strong>x = 3</strong><br><em>Check: 6·3³ = 6·27 = 162 ✓</em>`,
+   tips:'• Get the exponential term alone before taking logs<br>• Look for powers of the base first<br>• If base doesn\'t match, use logarithms'},
+  {k:'arithmetic sequence find 30th term a=7 a15=-35', topic:'Arithmetic Sequences',
+   q:'a₁=7, a₁₅=−35. Find a₃₀',
+   s:`<strong>Step 1: Formula</strong><br>aₙ = a₁ + (n−1)d<br><br><strong>Step 2: Find d using a₁₅</strong><br>−35 = 7 + 14d<br>14d = −42<br><strong>d = −3</strong><br><br><strong>Step 3: Find a₃₀</strong><br>a₃₀ = 7 + 29(−3)<br>= 7 − 87<br>= <strong>−80</strong><br><br>✅ <strong>a₃₀ = −80</strong>`,
+   tips:'• d = (aₙ−a₁)/(n−1)<br>• Common difference can be negative<br>• Each term decreases by 3'},
+  {k:'trigonometry solve 2cos²x+3sinx=3 0° 360°', topic:'Trigonometric Equations',
+   q:'2cos²x+3sinx=3, 0°≤x≤360°',
+   s:`<strong>Step 1: Use identity</strong><br>cos²x = 1−sin²x<br>2(1−sin²x)+3sinx=3<br><br><strong>Step 2: Simplify</strong><br>2−2sin²x+3sinx=3<br>−2sin²x+3sinx−1=0<br>2sin²x−3sinx+1=0<br><br><strong>Step 3: Let u=sinx</strong><br>2u²−3u+1=0<br>(2u−1)(u−1)=0<br>u=½ or u=1<br><br><strong>Step 4: Solve</strong><br>sinx=½ → x=30°,150°<br>sinx=1 → x=90°<br><br>✅ <strong>x = 30°, 90°, 150°</strong>`,
+   tips:'• cos²x+sin²x=1 is the key identity<br>• sinx=½ has two solutions in [0°,360°]<br>• Always check domain restrictions'},
+  {k:'distance between points (-4,-5) (-1,-1)', topic:'Coordinate Geometry',
+   q:'Distance between (−4,−5) and (−1,−1)',
+   s:`<strong>Step 1: Distance formula</strong><br>d = √[(x₂−x₁)²+(y₂−y₁)²]<br><br><strong>Step 2: Plug in</strong><br>d = √[(−1−(−4))²+(−1−(−5))²]<br>= √[(3)²+(4)²]<br>= √[9+16]<br>= √25<br><br>✅ <strong>d = 5</strong><br><em>This is a 3-4-5 right triangle!</em>`,
+   tips:'• Double negatives → addition: −1−(−4)=3<br>• Recognize Pythagorean triples: (3,4,5)<br>• Always take the positive root for distance'},
+
+  // ── Word Problems ──
+  {k:'train leaves station 8am 60 mph another train 9am 75 mph 300 miles apart when meet', topic:'Rate × Time = Distance',
+   q:'Train A leaves at 8am at 60mph. Train B leaves at 9am from 300mi away at 75mph toward A. When do they meet?',
+   s:`<strong>Step 1: Define variable</strong><br>Let t = hours after 8:00 AM<br><br><strong>Step 2: Write distances</strong><br>Train A: d₁ = 60t<br>Train B: d₂ = 75(t−1) [left 1hr later]<br><br><strong>Step 3: Set up equation</strong><br>60t + 75(t−1) = 300<br><br><strong>Step 4: Solve</strong><br>60t + 75t − 75 = 300<br>135t = 375<br>t = 375/135 = 25/9 ≈ <strong>2.778 hours</strong><br><br><strong>Step 5: Convert to time</strong><br>2.778h = 2h 47min<br>8:00 + 2:47 = <strong>10:47 AM</strong><br><br>✅ <strong>They meet at 10:47 AM</strong>`,
+   tips:'• Key: sum of distances = total separation<br>• The second train\'s time is (t−1), not t<br>• Verify: 60×2.778=166.7, 75×1.778=133.3, sum=300 ✓'},
+  {k:'work problem pipe fill tank 4 hours 6 hours together', topic:'Work Problems',
+   q:'Pipe A fills a tank in 4 hours. Pipe B fills it in 6 hours. How long together?',
+   s:`<strong>Step 1: Find rates</strong><br>Pipe A: 1/4 tank per hour<br>Pipe B: 1/6 tank per hour<br><br><strong>Step 2: Combined rate</strong><br>1/4 + 1/6 = 3/12 + 2/12 = <strong>5/12</strong> tank per hour<br><br><strong>Step 3: Time to fill</strong><br>Time = 1 ÷ (5/12) = 12/5 = <strong>2.4 hours</strong><br><br>✅ <strong>2 hours 24 minutes</strong>`,
+   tips:'• Rate = 1/time for "fill one tank" problems<br>• Add rates for combined work<br>• Time = 1/combined_rate'},
+  {k:'mixture 20% solution 50% how much mix 30%', topic:'Mixture Problems',
+   q:'How much 20% solution must be mixed with 10L of 50% to get 30%?',
+   s:`<strong>Step 1: Let x = liters of 20% solution</strong><br><br><strong>Step 2: Solute balance</strong><br>0.20x + 0.50(10) = 0.30(x+10)<br><br><strong>Step 3: Solve</strong><br>0.20x + 5 = 0.30x + 3<br>5 − 3 = 0.30x − 0.20x<br>2 = 0.10x<br><strong>x = 20 liters</strong><br><br>✅ <strong>20 liters of 20% solution</strong>`,
+   tips:'• Set up: solute in = solute out<br>• Total volume = x + 10<br>• Check: (0.2×20+0.5×10)/30 = 9/30 = 30% ✓'},
+
+  // ── Physics ──
+  {k:'inclined plane block ramp angle 30 friction coefficient 0.2 find acceleration', topic:'Inclined Plane',
+   q:'Block on 30° incline, μ=0.2. Find acceleration.',
+   s:`<strong>Step 1: Resolve gravity</strong><br>Parallel: mg·sin(30°) = mg·0.5<br>Perpendicular: mg·cos(30°) = mg·0.866<br><br><strong>Step 2: Normal force</strong><br>N = mg·cos(30°) = 0.866mg<br><br><strong>Step 3: Friction</strong><br>f = μN = 0.2×0.866mg = 0.173mg<br><br><strong>Step 4: Net force down ramp</strong><br>F = mg·sin(30°)−f<br>= mg(0.5−0.173) = 0.327mg<br><br><strong>Step 5: Acceleration</strong><br>a = F/m = 0.327g = 0.327×9.8<br>= <strong>3.20 m/s²</strong><br><br>✅ <strong>a = 3.20 m/s² down the ramp</strong>`,
+   tips:'• g·sinθ pulls down, friction opposes<br>• If μ>tanθ, block won\'t slide (μ=0.2<0.577→slides)<br>• Without friction: a=g·sin30°=4.9 m/s²'},
+  {k:'projectile thrown 20 m/s angle 45° max height range', topic:'Projectile Motion',
+   q:'Ball thrown at 20 m/s, 45° angle. Find max height and range.',
+   s:`<strong>Step 1: Resolve velocity</strong><br>vₓ = 20·cos(45°) = <strong>14.14 m/s</strong><br>vᵧ = 20·sin(45°) = <strong>14.14 m/s</strong><br><br><strong>Step 2: Max height</strong><br>H = vᵧ²/(2g) = 200/(2×9.8)<br>= <strong>10.2 m</strong><br><br><strong>Step 3: Time of flight</strong><br>T = 2vᵧ/g = 28.28/9.8 = <strong>2.89 s</strong><br><br><strong>Step 4: Range</strong><br>R = vₓ·T = 14.14×2.89 = <strong>40.8 m</strong><br><br>✅ <strong>H=10.2m, R=40.8m</strong>`,
+   tips:'• 45° gives maximum range for a given speed<br>• Time up = time down (symmetry)<br>• Air resistance ignored in basic model'},
+  {k:'kinematics car accelerates 2 m/s² 5 seconds distance velocity', topic:'Kinematics',
+   q:'Car accelerates at 2 m/s² from rest for 5s. Find final velocity and distance.',
+   s:`<strong>Step 1: Final velocity</strong><br>v = u + at<br>v = 0 + 2×5 = <strong>10 m/s</strong><br><br><strong>Step 2: Distance</strong><br>s = ut + ½at²<br>s = 0 + ½×2×25<br>= <strong>25 m</strong><br><br>Alternatively: s = ½(u+v)t = ½×10×5 = 25m ✓<br><br>✅ <strong>v=10 m/s, s=25 m</strong>`,
+   tips:'• SUVAT: s=ut+½at², v=u+at, v²=u²+2as<br>• Average velocity = (u+v)/2 = 5 m/s<br>• Check: 5 m/s × 5s = 25 m ✓'},
+
+  // ── Chemistry ──
+  {k:'balance equation H2 O2 H2O stoichiometry', topic:'Balancing Equations',
+   q:'Balance: H₂ + O₂ → H₂O',
+   s:`<strong>Step 1: Count atoms</strong><br>Left: H=2, O=2<br>Right: H=2, O=1<br><br><strong>Step 2: Balance O</strong><br>H₂ + O₂ → <strong>2</strong>H₂O<br>Now: H=2,O=2 → H=4,O=2<br><br><strong>Step 3: Balance H</strong><br><strong>2</strong>H₂ + O₂ → 2H₂O<br>Now: H=4,O=2 → H=4,O=2 ✓<br><br>✅ <strong>2H₂ + O₂ → 2H₂O</strong>`,
+   tips:'• Balance O last (appears in one compound each side)<br>• Coefficients must be simplest whole numbers<br>• Always recount after each change'},
+  {k:'molar mass calculate glucose C6H12O6', topic:'Molar Mass',
+   q:'Calculate the molar mass of glucose, C₆H₁₂O₆',
+   s:`<strong>Step 1: Atomic masses</strong><br>C = 12.01 g/mol<br>H = 1.008 g/mol<br>O = 16.00 g/mol<br><br><strong>Step 2: Multiply by counts</strong><br>C: 6 × 12.01 = 72.06<br>H: 12 × 1.008 = 12.10<br>O: 6 × 16.00 = 96.00<br><br><strong>Step 3: Sum</strong><br>72.06 + 12.10 + 96.00 = <strong>180.16 g/mol</strong><br><br>✅ <strong>180.16 g/mol</strong>`,
+   tips:'• Use periodic table for atomic masses<br>• Watch subscripts: C₆ means 6 carbons<br>• Round to 2 decimal places typically'},
+  {k:'limiting reagent 2H2 O2 4 mol H2 3 mol O2 excess', topic:'Limiting Reagent',
+   q:'2H₂+O₂→2H₂O. 4 mol H₂, 3 mol O₂. Find limiting reagent.',
+   s:`<strong>Step 1: Mole ratio from equation</strong><br>2 mol H₂ : 1 mol O₂<br><br><strong>Step 2: How much O₂ needed?</strong><br>4 mol H₂ × (1 O₂/2 H₂) = <strong>2 mol O₂ needed</strong><br><br><strong>Step 3: Compare</strong><br>Have: 3 mol O₂<br>Need: 2 mol O₂<br>O₂ is in <strong>excess</strong>, H₂ is <strong>limiting</strong><br><br><strong>Step 4: Products from limiting reagent</strong><br>4 mol H₂ × (2 H₂O/2 H₂) = <strong>4 mol H₂O</strong><br><br>✅ <strong>H₂ is limiting → 4 mol H₂O produced</strong>`,
+   tips:'• Limiting reagent = the one that runs out first<br>• Calculate how much of EACH reactant you need<br>• Products depend on limiting reagent, not excess'},
 ];
-let selectedSubjects = new Set(['Mathematics']);
-let tutorMode = 'solve';
-let expSlides = [], expIdx = 0;
 
-function goHome() { showPage('chat'); }
-function showAbout() { showPage('about'); }
-function showWelcome() { showPage('welcome'); renderSubjects(); }
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-}
-function renderSubjects() {
-  document.getElementById('subjectGrid').innerHTML = SUBJECTS.map(s =>
-    `<div class="subject-chip${selectedSubjects.has(s.name)?' selected':''}" onclick="toggleSubject('${s.name}',this)"><span class="icon">${s.icon}</span>${s.name}</div>`).join('');
-}
-function toggleSubject(name,el){ selectedSubjects.has(name)?(selectedSubjects.delete(name),el.classList.remove('selected')):(selectedSubjects.add(name),el.classList.add('selected')); }
-function saveSubjects(){ if(selectedSubjects.size===0)selectedSubjects.add('Mathematics'); goHome(); }
-function setMode(mode){ tutorMode=mode; document.querySelectorAll('.mode-chip').forEach(c=>c.classList.remove('active')); document.querySelector(`[data-mode="${mode}"]`).classList.add('active'); }
-
-function addMsg(role,html){ const c=document.getElementById('chat'); c.innerHTML+=`<div class="chat-msg ${role}">${html}</div>`; c.scrollTop=c.scrollHeight; }
-
-function send(){
-  const input=document.getElementById('msgInput'), text=input.value.trim();
-  if(!text)return;
-  addMsg('user',escapeHtml(text)); input.value='';
-  addMsg('ai','<span class="badge badge-ai">Thinking...</span>');
-  const divs=document.querySelectorAll('#chat .chat-msg.ai'), div=divs[divs.length-1];
-  setTimeout(()=>{
-    let resp,actions=[],lower=text.toLowerCase();
-    if(tutorMode==='socratic'){
-      resp=`🤔 <strong>Let me ask you instead:</strong> What do you already know about this topic?<br><br>Take your time.`;
-      actions=[{t:'Give me a hint',c:()=>sendPretyped('Give me a hint')},{t:'Start from basics',c:()=>sendPretyped('Explain from the basics')}];
-    }else if(tutorMode==='explain'){
-      resp=`📚 <strong>Concept Overview</strong><br><br><strong>What it is:</strong> A foundational idea.<br><br><strong>Principles:</strong><br>1. Core mechanism<br>2. Real-world application<br>3. Edge cases`;
-      actions=[{t:'Go deeper',c:()=>sendPretyped('Go deeper')},{t:'Examples',c:()=>sendPretyped('Show examples')},{t:'Quiz',c:()=>sendPretyped('Quiz me')}];
-    }else{
-      if(lower.includes('3x²')||lower.includes('3x^2')||lower.includes('quadratic')){
-        resp=`<strong>🧮 Core concept: Quadratic Equations</strong><br><br><strong>Problem:</strong> <code>3x²+5x-2=0</code><br><br><strong>Step 1:</strong> a=3, b=5, c=-2<br><strong>Step 2:</strong> Discriminant: 25+24=49<br><strong>Step 3:</strong> √49=7<br><strong>Step 4:</strong> x=(-5±7)/6<br><strong>Step 5:</strong> x=⅓, x=-2<br><br>✅ <strong>x = 1/3 or x = -2</strong>`;
-        actions=[{t:'Full explainer →',c:()=>openExplainer('quadratic'),cls:'accent'},{t:'Similar problem',c:()=>sendPretyped('Give me another quadratic')}];
-      }else if(lower.includes('word problem')||lower.includes('story')||lower.includes('train')||lower.includes('alice')||lower.includes('bob')){
-        resp=identifyWordProblem(text);
-        actions=[{t:'Full explainer →',c:()=>openExplainer('word'),cls:'accent'},{t:'Check my answer',c:()=>sendPretyped('Let me try to solve')}];
-      }else{
-        resp=`<strong>Here's the breakdown:</strong><br><br><strong>Step 1:</strong> Identify what we're solving for.<br><strong>Step 2:</strong> Apply the relevant formula.<br><strong>Step 3:</strong> Work through systematically.<br><strong>Step 4:</strong> Verify.`;
-        actions=[{t:'Practice',c:()=>sendPretyped('Give me practice problems')},{t:'Explain differently',c:()=>sendPretyped('Explain another way')}];
+// Keyword matching
+function matchProblem(text) {
+  const lower = text.toLowerCase().replace(/[^a-z0-9\s\+\-\=\(\)\^°]/g,' ').replace(/\s+/g,' ').trim();
+  let best = null, bestScore = 0;
+  for (const p of PROBLEMS) {
+    const kw = p.k.split(' ');
+    let score = 0;
+    for (const w of kw) {
+      if (lower.includes(w)) score++;
+      // Partial match for longer keywords
+      if (w.length > 3) {
+        for (let i=0;i<w.length-3;i++) {
+          if (lower.includes(w.substring(i,i+4))) { score+=0.3; break; }
+        }
       }
     }
-    div.innerHTML=resp+renderActions(actions);
-    document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight;
-  },600);
+    score = score / kw.length; // normalize
+    if (score > bestScore) { bestScore = score; best = p; }
+  }
+  return bestScore >= 0.25 ? best : null;
+}
+
+// ════════════ APP LOGIC ════════════
+const SUBJECTS=[{name:'Mathematics',icon:'📐'},{name:'Physics',icon:'⚡'},{name:'Chemistry',icon:'🧪'},{name:'Biology',icon:'🧬'},{name:'History',icon:'📜'},{name:'Economics',icon:'📈'},{name:'English',icon:'📖'},{name:'Computer Science',icon:'💻'},{name:'Psychology',icon:'🧠'},{name:'Geography',icon:'🌍'},{name:'Languages',icon:'🗣️'},{name:'Law',icon:'⚖️'},{name:'Business',icon:'💼'},{name:'Sociology',icon:'👥'}];
+let selectedSubjects=new Set(['Mathematics']),tutorMode='solve',expSlides=[],expIdx=0;
+
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function goHome(){showPage('chat')}
+function showAbout(){showPage('about')}
+function showWelcome(){showPage('welcome');renderSubjects()}
+function showPage(n){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+n).classList.add('active')}
+function renderSubjects(){document.getElementById('subjectGrid').innerHTML=SUBJECTS.map(s=>`<div class="subject-chip${selectedSubjects.has(s.name)?' selected':''}" onclick="toggleSubject('${s.name}',this)"><span class="icon">${s.icon}</span>${s.name}</div>`).join('')}
+function toggleSubject(n,el){selectedSubjects.has(n)?(selectedSubjects.delete(n),el.classList.remove('selected')):(selectedSubjects.add(n),el.classList.add('selected'))}
+function saveSubjects(){if(selectedSubjects.size===0)selectedSubjects.add('Mathematics');goHome()}
+function setMode(m){tutorMode=m;document.querySelectorAll('.mode-chip').forEach(c=>c.classList.remove('active'));document.querySelector(`[data-mode="${m}"]`).classList.add('active')}
+function addMsg(role,html){const c=document.getElementById('chat');c.innerHTML+=`<div class="chat-msg ${role}">${html}</div>`;c.scrollTop=c.scrollHeight}
+
+function send(){
+  const input=document.getElementById('msgInput'),text=input.value.trim();
+  if(!text)return;
+  addMsg('user',escapeHtml(text));input.value='';
+  const p=matchProblem(text);
+
+  if(tutorMode==='socratic'){
+    addMsg('ai',`🤔 <strong>Socratic mode:</strong> What do YOU think the answer is?<br><br>Try to work it out yourself first — I'll confirm if you're right and help if you're stuck.`);
+  }else if(p){
+    const html=`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
+    const actions=[{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>💡 Tips for ${p.topic}:</strong><br><br>${p.tips}`)},{t:'🔄 Similar',c:()=>sendPretyped('Give me another '+p.topic.split(' ')[0].toLowerCase()+' problem')}];
+    addMsg('ai',html+renderActions(actions));
+  }else{
+    const resp=tutorMode==='explain'
+      ?`📚 <strong>Concept Overview</strong><br><br>Try giving me a specific problem — like "solve 2x²+7x-15=0" or "a train leaves at 8am..." — and I'll walk you through it step by step.`
+      :`I didn't find an exact match for that problem. Try:<br><br>• <strong>"Solve 2x²+7x−15=0"</strong><br>• <strong>"Factor x³−4x²−7x+10"</strong><br>• <strong>"A train leaves at 8am at 60mph..."</strong><br>• <strong>"Balance H₂+O₂→H₂O"</strong><br>• <strong>"Block on 30° incline, μ=0.2"</strong><br><br>Or snap a photo 📷 of your homework!`;
+    const actions=text.length>20?[{t:'Try rephrasing',c:()=>sendPretyped('Solve: '+text)}]:[];
+    addMsg('ai',resp+renderActions(actions));
+  }
 }
 
 function sendPretyped(msg){
   addMsg('user',msg);
-  addMsg('ai','<span class="badge badge-ai">Thinking...</span>');
-  const divs=document.querySelectorAll('#chat .chat-msg.ai'), div=divs[divs.length-1];
-  setTimeout(()=>{
-    let resp=`<strong>Great question!</strong><br><br>`;
-    if(msg.toLowerCase().includes('practice')||msg.toLowerCase().includes('similar')){
-      resp+=`<strong>Practice:</strong> A train leaves at 8AM at 60mph. Another leaves at 9AM from 300mi away at 75mph. When do they meet?<br><br>Approach: 60t + 75(t−1) = 300 → solve for t.`;
-    }else if(msg.toLowerCase().includes('different')||msg.toLowerCase().includes('method')){
-      resp+=`<strong>Alternative:</strong> Factoring or completing the square. Which?`;
-    }else{ resp+=`Here's more detail on each step. Want even deeper?`; }
-    div.innerHTML=resp+renderActions([{t:'Keep going',c:()=>sendPretyped('Keep explaining')},{t:'Try a problem',c:()=>sendPretyped('Practice problem')}]);
-    document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight;
-  },500);
-}
-
-function identifyWordProblem(text){
-  return `<span class="badge badge-ai">📝 Word Problem — Core Concept</span><br><br><strong>🔑 Core concept: Rate × Time = Distance</strong><br><br><strong>Key info:</strong><br>• Two objects moving toward each other<br>• Different start times, known speeds & distance<br><br><strong>Strategy:</strong><br>1. Variable: let t = time<br>2. distance = rate × time for each<br>3. d₁ + d₂ = total distance<br>4. Solve for t<br><br><strong>Formula:</strong> <code>r₁t₁ + r₂t₂ = D</code>`;
+  const p=matchProblem(msg);
+  if(p){
+    addMsg('ai',`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+renderActions([{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>Tips:</strong><br>${p.tips}`)}]));
+  }else{
+    addMsg('ai',`Let me help with that. Can you rephrase or give me a specific equation?`);
+  }
 }
 
 function renderActions(actions){
-  if(!actions.length)return'';
-  return`<div class="action-btns">${actions.map((a,i)=>`<button class="action-btn${a.cls?' '+a.cls:''}${i===0&&!a.cls?' primary':''}" onclick="(${a.c.toString()})()">${a.t}</button>`).join('')}</div>`;
+  return`<div class="action-btns">${actions.map((a,i)=>`<button class="action-btn${i===0&&!a.cls?' primary':a.cls?' '+a.cls:''}" onclick="(${a.c.toString()})()">${a.t}</button>`).join('')}</div>`;
 }
 
-// ── Camera + Nano Banana ──
 function capturePhoto(input){
-  const file=input.files[0]; if(!file)return;
+  const file=input.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=()=>{ addMsg('user',`<img src="${reader.result}"><div class="chat-img-label"><span class="badge badge-cam">📷 Photo</span> Analyzing...</div>`); analyzeWithNanoBanana(reader.result); };
-  reader.readAsDataURL(file); input.value='';
+  reader.onload=()=>{addMsg('user',`<img src="${reader.result}"><div class="chat-img-label"><span class="badge badge-cam">📷 Photo</span></div>`);analyzePhoto()};
+  reader.readAsDataURL(file);input.value='';
 }
 
-function analyzeWithNanoBanana(dataUrl){
-  const chat=document.getElementById('chat');
-  const div=document.createElement('div'); div.className='chat-msg ai';
-  div.innerHTML='<span class="badge badge-ai">🔍 Nano Banana 2</span> Scanning image...';
-  chat.appendChild(div); chat.scrollTop=chat.scrollHeight;
+function analyzePhoto(){
+  // Simulates Nano Banana 2 analyzing the photo and matching to a problem
+  const p=PROBLEMS[Math.floor(Math.random()*PROBLEMS.length)];
+  addMsg('ai',`<span class="badge badge-ai">🔍 Nano Banana 2</span> Analyzing image...`);
+  const divs=document.querySelectorAll('#chat .chat-msg.ai'),div=divs[divs.length-1];
   setTimeout(()=>{
-    const pick=Math.floor(Math.random()*5); let html,actions;
-    if(pick===0){
-      html=`<span class="badge badge-ai">🔍 Nano Banana 2 — Word Problem</span><br><br><strong>📝 Detected:</strong> Word problem — handwritten<br><strong>🔑 Core concept: Rate × Time = Distance</strong><br><br><strong>Extracted:</strong><br>• Two vehicles, different departure times<br>• Speeds ~60 mph and 75 mph<br>• Separation ~300 miles<br>• Question: "When do they meet?"<br><br><strong>Strategy:</strong><br>1. Let t = hours after first departure<br>2. Vehicle A: 60t<br>3. Vehicle B: 75(t−1)<br>4. 60t + 75(t−1) = 300<br>5. t = 2.78h ≈ 2h 47min<br><br>✅ <strong>~10:47 AM</strong><br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
-      actions=[{t:'📖 Full Solution',c:()=>openExplainer('word'),cls:'accent'},{t:'Check my work',c:()=>sendPretyped('Let me solve and you check')}];
-    }else if(pick===1){
-      html=`<span class="badge badge-ai">🔍 Nano Banana 2 — Math</span><br><br><strong>🧮 Core concept: Quadratic Equations</strong><br><strong>Detected:</strong> <code>2x²+7x−15=0</code><br><br><strong>Solve:</strong><br>• a=2, b=7, c=−15<br>• Discriminant: 49+120=169<br>• √169=13<br>• x=(−7±13)/4<br>• x₁=1.5, x₂=−5<br><br>✅ <strong>x = 3/2 or x = −5</strong><br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
-      actions=[{t:'📖 Full Solution',c:()=>openExplainer('quadratic'),cls:'accent'},{t:'Try factoring',c:()=>sendPretyped('Show factoring method')}];
-    }else if(pick===2){
-      html=`<span class="badge badge-ai">🔍 Nano Banana 2 — Physics</span><br><br><strong>⚡ Core concept: Inclined Plane</strong><br><br><strong>Forces:</strong><br>• Gravity mg ↓<br>• Normal N = mg·cos(θ) ⊥<br>• Parallel mg·sin(θ) ∥<br>• Friction f = μN<br><br><strong>Net:</strong> F = mg(sin θ − μ·cos θ)<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
-      actions=[{t:'📖 Full Solution',c:()=>openExplainer('physics'),cls:'accent'},{t:'Plug numbers',c:()=>sendPretyped('Plug in θ=30°, μ=0.2')}];
-    }else if(pick===3){
-      html=`<span class="badge badge-ai">🔍 Nano Banana 2 — Chemistry</span><br><br><strong>🧪 Glucose C₆H₁₂O₆</strong><br>6-membered pyranose ring<br>5 −OH groups, 4 chiral centers<br>Energy: glycolysis → Krebs → ETC<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
-      actions=[{t:'📖 Full Solution',c:()=>openExplainer('chemistry'),cls:'accent'},{t:'Glycolysis detail',c:()=>sendPretyped('Walk me through glycolysis')}];
-    }else{
-      html=`<span class="badge badge-ai">🔍 Nano Banana 2 — General</span><br><br><strong>📄 Detected:</strong> Study notes / textbook<br><strong>Topics visible:</strong> Main concept + examples + formula<br><br>Tell me which problem to work through!<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
-      actions=[{t:'Explain topic',c:()=>sendPretyped('Explain the main topic')},{t:'Solve problem',c:()=>sendPretyped('Solve a problem from this page')}];
-    }
-    div.innerHTML=html+renderActions(actions); chat.scrollTop=chat.scrollHeight;
-  },1200);
+    div.innerHTML=`<span class="badge badge-ai">🔍 Nano Banana 2 — ${p.topic}</span><br><br><strong>📝 Detected:</strong> ${p.topic} problem<br><strong>📋 Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+renderActions([{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>Tips:</strong><br>${p.tips}`)},{t:'🔄 Another',c:()=>analyzePhoto()}]);
+    document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight;
+  },1500);
 }
 
-// ═══════════════ EXPLAINER ═══════════════
-function openExplainer(type){
-  const ov=document.getElementById('explainer');
-  expSlides=buildExplainer(type); expIdx=0;
-  document.getElementById('expTitle').textContent=type==='quadratic'?'Quadratic Equations':type==='word'?'Rate × Time Word Problems':type==='physics'?'Inclined Plane Physics':type==='chemistry'?'Glucose & Carbohydrates':'Full Solution';
+// ════════════ EXPLAINER ════════════
+function openExplainer(p){
+  expSlides=buildSlides(p);expIdx=0;
+  document.getElementById('expTitle').textContent=p.topic;
   document.getElementById('expBadge').textContent='Nano Banana 2';
-  renderExpSlide(); ov.classList.add('open');
+  renderExpSlide();document.getElementById('explainer').classList.add('open');
 }
-function closeExplainer(){ document.getElementById('explainer').classList.remove('open'); }
-function expSlide(dir){ expIdx=Math.max(0,Math.min(expSlides.length-1,expIdx+dir)); renderExpSlide(); }
-
+function closeExplainer(){document.getElementById('explainer').classList.remove('open')}
+function expSlide(d){expIdx=Math.max(0,Math.min(expSlides.length-1,expIdx+d));renderExpSlide()}
 function renderExpSlide(){
   document.getElementById('expBody').innerHTML=expSlides[expIdx]||'';
   document.getElementById('expPrev').style.visibility=expIdx===0?'hidden':'';
   document.getElementById('expNext').style.visibility=expIdx===expSlides.length-1?'hidden':'';
   document.getElementById('expNext').textContent=expIdx===expSlides.length-1?'Done':'Next →';
-  if(expIdx===expSlides.length-1) document.getElementById('expNext').onclick=closeExplainer;
-  else document.getElementById('expNext').onclick=()=>expSlide(1);
-  // Dots
+  document.getElementById('expNext').onclick=expIdx===expSlides.length-1?closeExplainer:()=>expSlide(1);
   document.getElementById('expDots').innerHTML=expSlides.map((_,i)=>`<div class="exp-dot${i===expIdx?' active':''}" onclick="expIdx=${i};renderExpSlide()"></div>`).join('');
 }
-
-function buildExplainer(type){
-  if(type==='quadratic') return [
-    `<h3>📋 Slide 1 — The Problem</h3><p>You're looking at a <strong>quadratic equation</strong>: <code>ax² + bx + c = 0</code></p><p>In this case: <code>2x² + 7x − 15 = 0</code></p><p><strong>What we're solving:</strong> Find the value(s) of x that make this equation true.</p><p>Quadratic equations always have 0, 1, or 2 real solutions — in this case, there are two.</p>`,
-    `<h3>🧠 Slide 2 — Strategy</h3><p>We'll use the <strong>quadratic formula</strong>:</p><p style="text-align:center;font-size:18px;padding:16px"><code>x = (−b ± √(b² − 4ac)) / 2a</code></p><div class="tip-card"><span class="tip-icon">💡</span><p><strong>Tip:</strong> Always write down a, b, c first. It prevents sign errors — the #1 mistake students make.</p></div><p>The <strong>discriminant</strong> (b² − 4ac) tells us how many solutions exist:<br>• Positive → 2 solutions<br>• Zero → 1 solution<br>• Negative → no real solutions</p>`,
-    `<h3>🔢 Slide 3 — Step-by-Step Solution</h3><div class="solution-block">
-<div class="step"><div class="step-num">1</div><div><strong>Identify coefficients</strong><br><code>a = 2, b = 7, c = −15</code></div></div>
-<div class="step"><div class="step-num">2</div><div><strong>Calculate discriminant</strong><br><code>b² − 4ac = 49 − 4(2)(−15) = 49 + 120 = 169</code></div></div>
-<div class="step"><div class="step-num">3</div><div><strong>Square root</strong><br><code>√169 = 13</code></div></div>
-<div class="step"><div class="step-num">4</div><div><strong>Apply formula</strong><br><code>x = (−7 ± 13) / 4</code></div></div>
-<div class="step"><div class="step-num">5</div><div><strong>Split into two cases</strong><br><code>x₁ = (−7 + 13) / 4 = 6/4 = 3/2</code><br><code>x₂ = (−7 − 13) / 4 = −20/4 = −5</code></div></div>
-</div><p>✅ <strong>Answer: x = 1.5 or x = −5</strong></p><p style="font-size:12px;color:var(--text3)">Generated by Nano Banana 2 — Higgsfield AI</p>`,
-    `<h3>💡 Slide 4 — Tips & Common Mistakes</h3>
-<div class="tip-card"><span class="tip-icon">⚠️</span><p><strong>Sign error:</strong> When c is negative, −4ac becomes positive. Don't forget the double negative!</p></div>
-<div class="tip-card"><span class="tip-icon">🔍</span><p><strong>Always check:</strong> Plug your answers back into the original equation to verify.</p></div>
-<div class="tip-card"><span class="tip-icon">🎯</span><p><strong>Alternative methods:</strong> Factoring works when the discriminant is a perfect square (169 = 13²). Try it!</p></div>`,
-    `<h3>📺 Slide 5 — Video Reference</h3><p>Khan Academy — Quadratic Formula Explained</p><div class="video-wrap"><iframe src="https://www.youtube.com/embed/i7idZfS8t8w" frameborder="0" allowfullscreen></iframe></div><p style="font-size:12px;color:var(--text3);margin-top:8px">External video for additional learning. Not affiliated.</p>`,
-    `<h3>🎯 Slide 6 — Practice</h3><p>Try these on your own:</p><p>1. <code>x² − 5x + 6 = 0</code><br>2. <code>3x² + x − 2 = 0</code><br>3. <code>4x² − 12x + 9 = 0</code></p><p>Check your answers by plugging them back in. Want me to grade them? Just ask in the chat!</p>`
+function buildSlides(p){
+  const steps=p.s.split('<br><br>').filter(s=>s.includes('<strong>Step'));
+  return [
+    `<h3>📋 Problem</h3><p><strong>Topic:</strong> ${p.topic}</p><p><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code></p><p>Let's work through this systematically.</p>`,
+    `<h3>🧠 Strategy</h3><p>Here's the approach:</p><div class="tip-card"><p>${p.tips.split('<br>')[0]}</p></div><p>We'll break it down into ${steps.length} clear steps.</p>`,
+    `<h3>🔢 Step-by-Step Solution</h3><div class="solution-block">${steps.map((st,i)=>`<div class="step"><div class="step-num">${i+1}</div><div>${st.replace(/<strong>Step \d+:<\/strong>\s*/,'')}</div></div>`).join('')}</div><p style="font-size:12px;color:var(--text3)">Generated by Nano Banana 2 — Higgsfield AI</p>`,
+    `<h3>💡 Tips</h3>${p.tips.split('<br>').filter(Boolean).map(t=>`<div class="tip-card"><p>${t.replace(/^[•\-]\s*/,'')}</p></div>`).join('')}`,
+    `<h3>🎯 Practice</h3><p>Try a similar problem on your own. Need another? Just ask in the chat.</p><p>Want me to check your work on this problem type? Send me your answer!</p>`
   ];
-  if(type==='word') return [
-    `<h3>📋 Slide 1 — Read the Problem</h3><p>A train leaves Station A at 8:00 AM traveling at <strong>60 mph</strong>. Another train leaves Station B — <strong>300 miles away</strong> — at 9:00 AM traveling at <strong>75 mph</strong> toward Station A. When do they meet?</p><p><strong>🔑 Core concept: Rate × Time = Distance</strong></p><div class="tip-card"><span class="tip-icon">💡</span><p><strong>Tip:</strong> For "meeting" problems, the sum of distances = total separation.</p></div>`,
-    `<h3>🧠 Slide 2 — Strategy</h3><p><strong>1.</strong> Define a variable: let <code>t</code> = hours after 8:00 AM</p><p><strong>2.</strong> Train A's distance: <code>d₁ = 60t</code></p><p><strong>3.</strong> Train B left 1 hour later, so its travel time is <code>t − 1</code>: <code>d₂ = 75(t − 1)</code></p><p><strong>4.</strong> They meet when total distance = 300: <code>60t + 75(t − 1) = 300</code></p><p><strong>5.</strong> Solve for t — that's the time after 8 AM.</p>`,
-    `<h3>🔢 Slide 3 — Show Your Work</h3><div class="solution-block">
-<div class="step"><div class="step-num">1</div><div><strong>Set up equation</strong><br><code>60t + 75(t − 1) = 300</code></div></div>
-<div class="step"><div class="step-num">2</div><div><strong>Distribute</strong><br><code>60t + 75t − 75 = 300</code></div></div>
-<div class="step"><div class="step-num">3</div><div><strong>Combine like terms</strong><br><code>135t − 75 = 300</code></div></div>
-<div class="step"><div class="step-num">4</div><div><strong>Add 75 to both sides</strong><br><code>135t = 375</code></div></div>
-<div class="step"><div class="step-num">5</div><div><strong>Divide by 135</strong><br><code>t = 375/135 = 25/9 ≈ 2.778 hours</code></div></div>
-<div class="step"><div class="step-num">6</div><div><strong>Convert to time</strong><br><code>2.778 hours = 2h 47min</code><br>8:00 AM + 2h 47min = <strong>10:47 AM</strong></div></div>
-</div><p>✅ <strong>They meet at approximately 10:47 AM</strong></p><p style="font-size:12px;color:var(--text3)">Generated by Nano Banana 2 — Higgsfield AI</p>`,
-    `<h3>💡 Slide 4 — Tips & Pitfalls</h3>
-<div class="tip-card"><span class="tip-icon">⚠️</span><p><strong>Time offset:</strong> The second train leaves 1 hour later. Its travel time is (t−1), not t. This is the most common mistake.</p></div>
-<div class="tip-card"><span class="tip-icon">✅</span><p><strong>Verify:</strong> At 10:47 AM, Train A has traveled 60 × 2.78 = 166.7 mi. Train B: 75 × 1.78 = 133.3 mi. Total: 300 mi. ✓</p></div>
-<div class="tip-card"><span class="tip-icon">🎯</span><p><strong>Variation:</strong> If they're moving in the same direction, subtract distances instead of adding.</p></div>`,
-    `<h3>📺 Slide 5 — Video Reference</h3><p>Khan Academy — Rate Problems</p><div class="video-wrap"><iframe src="https://www.youtube.com/embed/3k5nlM4N1i4" frameborder="0" allowfullscreen></iframe></div>`,
-    `<h3>🎯 Slide 6 — Try It</h3><p>Two cyclists start 120 miles apart and ride toward each other. One goes 15 mph, the other 20 mph. When do they meet?</p><p>Setup: 15t + 20t = 120 → 35t = 120 → t ≈ 3.43 hours</p><p>Now try: <strong>Same speeds, but the faster cyclist starts 30 minutes later.</strong></p>`
-  ];
-  if(type==='physics') return [
-    `<h3>📋 Slide 1 — The Setup</h3><p>A block sits on a ramp inclined at angle <strong>θ</strong>.</p><p><strong>⚡ Core concept: Newton's Second Law</strong> — F = ma</p><p>The key insight: <strong>gravity splits into two components</strong> — one parallel to the ramp, one perpendicular.</p>`,
-    `<h3>🔢 Slide 2 — Force Decomposition</h3><div class="solution-block">
-<div class="step"><div class="step-num">1</div><div><strong>Weight</strong><br><code>W = mg</code> (straight down)</div></div>
-<div class="step"><div class="step-num">2</div><div><strong>Parallel component</strong><br><code>F∥ = mg·sin(θ)</code> (pulls down ramp)</div></div>
-<div class="step"><div class="step-num">3</div><div><strong>Perpendicular component</strong><br><code>F⊥ = mg·cos(θ)</code> (into surface)</div></div>
-<div class="step"><div class="step-num">4</div><div><strong>Normal force</strong><br><code>N = mg·cos(θ)</code> (balances F⊥)</div></div>
-<div class="step"><div class="step-num">5</div><div><strong>Friction</strong><br><code>f = μN = μmg·cos(θ)</code> (opposes motion)</div></div>
-</div><p><strong>Net force down ramp:</strong> <code>F = mg(sin θ − μ·cos θ)</code></p><p><strong>Acceleration:</strong> <code>a = g(sin θ − μ·cos θ)</code></p>`,
-    `<h3>💡 Slide 3 — Tips</h3><div class="tip-card"><span class="tip-icon">⚠️</span><p>sin and cos swap roles from the usual "horizontal = cos" intuition. On an incline, parallel = sin.</p></div><div class="tip-card"><span class="tip-icon">🔍</span><p>If μ > tan(θ), the block won't slide — friction holds it.</p></div>`,
-    `<h3>📺 Slide 4 — Video</h3><p>Khan Academy — Inclined Planes</p><div class="video-wrap"><iframe src="https://www.youtube.com/embed/TC23wD34C7k" frameborder="0" allowfullscreen></iframe></div>`
-  ];
-  if(type==='chemistry') return [
-    `<h3>📋 Slide 1 — Glucose Structure</h3><p><strong>C₆H₁₂O₆</strong> — the most important sugar in biology.</p><p>In solution, glucose forms a <strong>6-membered ring</strong> (pyranose) with oxygen as the heteroatom.</p><p>It has 4 chiral centers (C2, C3, C4, C5) and an anomeric carbon at C1.</p>`,
-    `<h3>🔢 Slide 2 — Functional Groups</h3><p>• <strong>5 hydroxyl (−OH) groups</strong> at positions C1 through C4 and C6<br>• <strong>Hemiacetal</strong> at C1 (formed when the ring closes)<br>• In open-chain form: aldehyde at C1</p><p>These −OH groups make glucose highly soluble in water and enable hydrogen bonding.</p>`,
-    `<h3>⚡ Slide 3 — Energy Metabolism</h3><div class="solution-block">
-<div class="step"><div class="step-num">1</div><div><strong>Glycolysis</strong><br>Glucose → 2 Pyruvate + 2 ATP + 2 NADH<br>(Occurs in cytoplasm)</div></div>
-<div class="step"><div class="step-num">2</div><div><strong>Krebs Cycle</strong><br>Pyruvate → CO₂ + NADH + FADH₂<br>(Mitochondrial matrix)</div></div>
-<div class="step"><div class="step-num">3</div><div><strong>Electron Transport Chain</strong><br>NADH/FADH₂ → ~34 ATP<br>(Inner mitochondrial membrane)</div></div>
-</div><p>Total: ~36-38 ATP per glucose molecule.</p>`,
-    `<h3>📺 Slide 4 — Video</h3><p>Cellular Respiration Overview</p><div class="video-wrap"><iframe src="https://www.youtube.com/embed/00jbG_cfGuQ" frameborder="0" allowfullscreen></iframe></div>`
-  ];
-  return [`<h3>📋 Full Solution</h3><p>Detailed slides coming soon. Ask me a specific question in the chat!</p>`];
 }
-
-function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 renderSubjects();
 </script>
 </body>
