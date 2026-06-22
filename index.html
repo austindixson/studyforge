@@ -3,390 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>StudyForge — AI Tutor for All Subjects</title>
+<title>StudyForge — AI Tutor</title>
 <style>
 :root {
-  --gold: #F5A623; --gold-dark: #D4891A; --gold-light: #FFF3DC;
-  --blue: #2563EB; --blue-dark: #1D4ED8;
-  --bg: #FFFFFF; --bg2: #F8FAFC; --bg3: #F1F5F9;
-  --text: #0F172A; --text2: #475569; --text3: #94A3B8;
-  --border: #E2E8F0; --shadow: 0 1px 3px rgba(0,0,0,.08);
-  --shadow-lg: 0 10px 40px rgba(0,0,0,.1);
-  --radius: 12px; --radius-sm: 8px;
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --gold:#F5A623; --gold-dark:#D4891A; --gold-light:#FFF3DC;
+  --blue:#2563EB; --blue-dark:#1D4ED8;
+  --bg:#FFFFFF; --bg2:#F8FAFC; --bg3:#F1F5F9;
+  --text:#0F172A; --text2:#475569; --text3:#94A3B8;
+  --border:#E2E8F0;
+  --radius:12px; --radius-sm:8px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior:smooth; }
-body { font-family:var(--font); color:var(--text); background:var(--bg); line-height:1.6; overflow-x:hidden; }
+body { font-family:var(--font); color:var(--text); background:var(--bg); height:100dvh; overflow:hidden; }
 
-/* ── Nav ── */
-nav { position:sticky; top:0; z-index:100; background:rgba(255,255,255,.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; }
-.nav-logo { font-size:22px; font-weight:800; color:var(--text); }
-.nav-logo span { color:var(--gold); }
-.nav-links { display:flex; gap:24px; align-items:center; }
-.nav-links a { text-decoration:none; color:var(--text2); font-size:14px; font-weight:500; transition:color .2s; }
-.nav-links a:hover { color:var(--text); }
-.btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border-radius:var(--radius-sm); font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all .2s; text-decoration:none; font-family:var(--font); }
-.btn-gold { background:var(--gold); color:#fff; }
-.btn-gold:hover { background:var(--gold-dark); transform:translateY(-1px); }
-.btn-outline { background:transparent; border:2px solid var(--border); color:var(--text); }
-.btn-outline:hover { border-color:var(--text2); }
-.btn-blue { background:var(--blue); color:#fff; }
-.btn-blue:hover { background:var(--blue-dark); }
-.btn-lg { padding:14px 28px; font-size:16px; border-radius:var(--radius); }
+/* ── Top Bar ── */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg); }
+.topbar h1 { font-size:18px; font-weight:800; }
+.topbar h1 span { color:var(--gold); }
+.topbar-actions { display:flex; gap:6px; align-items:center; }
+.icon-btn { width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--bg); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+.icon-btn:hover { background:var(--bg2); border-color:var(--text3); }
+.icon-btn.active { background:var(--gold); color:#fff; border-color:var(--gold); }
 
-/* ── Screens ── */
-.screen { display:none; min-height:100vh; }
-.screen.active { display:block; }
+/* ── Mode chips ── */
+.mode-bar { display:flex; gap:6px; padding:8px 16px; overflow-x:auto; border-bottom:1px solid var(--border); }
+.mode-chip { padding:6px 14px; border-radius:99px; border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:500; background:var(--bg); white-space:nowrap; transition:all .15s; }
+.mode-chip.active { background:var(--gold); color:#fff; border-color:var(--gold); }
 
-/* ── Hero ── */
-.hero { padding:80px 24px 60px; text-align:center; max-width:900px; margin:0 auto; }
-.hero-badge { display:inline-block; padding:6px 16px; border-radius:99px; background:var(--gold-light); color:var(--gold-dark); font-size:13px; font-weight:600; margin-bottom:24px; }
-.hero h1 { font-size:clamp(32px,5vw,56px); font-weight:800; line-height:1.15; margin-bottom:20px; letter-spacing:-1px; }
-.hero h1 span { color:var(--gold); }
-.hero p { font-size:18px; color:var(--text2); max-width:600px; margin:0 auto 32px; }
-.hero-buttons { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-.hero-stats { display:flex; gap:40px; justify-content:center; margin-top:48px; flex-wrap:wrap; }
-.stat { text-align:center; }
-.stat-num { font-size:32px; font-weight:800; color:var(--gold); }
-.stat-label { font-size:14px; color:var(--text2); }
+/* ── Chat ── */
+.chat { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:14px; }
+.chat-msg { max-width:88%; padding:12px 16px; border-radius:18px; font-size:14px; line-height:1.5; animation:fadeIn .3s; word-wrap:break-word; }
+.chat-msg.user { align-self:flex-end; background:var(--blue); color:#fff; border-bottom-right-radius:6px; }
+.chat-msg.ai { align-self:flex-start; background:var(--bg2); border:1px solid var(--border); border-bottom-left-radius:6px; }
+.chat-msg img { max-width:200px; max-height:200px; border-radius:10px; margin:6px 0; display:block; }
+.chat-msg.ai img { border:1px solid var(--border); }
+.chat-img-label { font-size:11px; opacity:.7; margin-top:4px; }
+.badge { display:inline-block; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:600; margin-bottom:4px; }
+.badge-cam { background:var(--gold-light); color:var(--gold-dark); }
+.badge-ai { background:#EEF2FF; color:var(--blue); }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 
-/* ── Section ── */
-.section { padding:80px 24px; max-width:1100px; margin:0 auto; }
-.section h2 { font-size:clamp(24px,4vw,36px); font-weight:800; text-align:center; margin-bottom:16px; letter-spacing:-.5px; }
-.section-sub { text-align:center; color:var(--text2); font-size:16px; margin-bottom:48px; }
+/* ── Input bar ── */
+.input-bar { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border); background:var(--bg); align-items:center; }
+.input-bar input { flex:1; padding:12px 16px; border:2px solid var(--border); border-radius:99px; font-size:15px; font-family:var(--font); outline:none; transition:border .2s; }
+.input-bar input:focus { border-color:var(--gold); }
+.cam-btn { width:42px; height:42px; border-radius:50%; border:2px solid var(--border); background:var(--bg); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; flex-shrink:0; }
+.cam-btn:hover,.cam-btn:active { border-color:var(--gold); background:var(--gold-light); }
+.send-btn { width:42px; height:42px; border-radius:50%; border:none; background:var(--gold); color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; }
+.send-btn:hover { background:var(--gold-dark); }
+#camInput { display:none; }
 
-/* ── Features ── */
-.features { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; }
-.feature-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:28px; transition:all .3s; }
-.feature-card:hover { box-shadow:var(--shadow-lg); transform:translateY(-2px); }
-.feature-icon { font-size:32px; margin-bottom:16px; display:block; }
-.feature-card h3 { font-size:18px; font-weight:700; margin-bottom:8px; }
-.feature-card p { font-size:14px; color:var(--text2); }
-
-/* ── Products ── */
-.products { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px; }
-.product-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:all .3s; }
-.product-card:hover { box-shadow:var(--shadow-lg); }
-.product-img { height:180px; background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:48px; }
-.product-body { padding:24px; }
-.product-body h3 { font-size:20px; font-weight:700; margin-bottom:8px; }
-.product-body p { font-size:14px; color:var(--text2); margin-bottom:16px; }
-
-/* ── Testimonials ── */
-.testimonials { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; }
-.testimonial { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:24px; }
-.testimonial .stars { color:var(--gold); font-size:16px; margin-bottom:8px; }
-.testimonial p { font-size:14px; color:var(--text2); font-style:italic; margin-bottom:12px; }
-.testimonial .author { font-size:13px; font-weight:600; color:var(--text); }
-
-/* ── FAQ ── */
-.faq { max-width:700px; margin:0 auto; }
-.faq-item { border-bottom:1px solid var(--border); padding:20px 0; cursor:pointer; }
-.faq-q { font-weight:600; font-size:16px; display:flex; justify-content:space-between; align-items:center; }
-.faq-a { font-size:14px; color:var(--text2); margin-top:12px; display:none; }
-.faq-item.open .faq-a { display:block; }
-
-/* ── CTA ── */
-.cta { background:linear-gradient(135deg,var(--blue),var(--blue-dark)); color:#fff; text-align:center; padding:80px 24px; }
-.cta h2 { color:#fff; }
-.cta p { color:rgba(255,255,255,.8); font-size:16px; margin-bottom:24px; }
-.cta .btn-gold { background:#fff; color:var(--blue); font-size:16px; padding:14px 32px; }
-
-/* ── Onboarding ── */
-.onboard { max-width:600px; margin:80px auto; padding:0 24px; text-align:center; }
-.onboard h1 { font-size:28px; margin-bottom:8px; }
-.onboard p { color:var(--text2); margin-bottom:32px; }
-.subject-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; margin-bottom:32px; }
-.subject-chip { padding:12px; border:2px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; font-size:14px; font-weight:500; transition:all .2s; text-align:center; }
+/* ── Welcome screen (first-visit overlay) ── */
+.welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; text-align:center; }
+.welcome-icon { font-size:56px; margin-bottom:16px; }
+.welcome h2 { font-size:22px; margin-bottom:8px; }
+.welcome p { color:var(--text2); font-size:14px; max-width:300px; margin-bottom:24px; }
+.subject-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; width:100%; max-width:400px; margin-bottom:24px; }
+.subject-chip { padding:10px 8px; border:2px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; font-size:12px; font-weight:500; transition:all .2s; text-align:center; }
 .subject-chip:hover { border-color:var(--gold); }
 .subject-chip.selected { background:var(--gold-light); border-color:var(--gold); color:var(--gold-dark); }
-.subject-chip .icon { font-size:24px; display:block; margin-bottom:4px; }
+.subject-chip .icon { font-size:20px; display:block; margin-bottom:2px; }
 
-/* ── Dashboard ── */
-.dash { max-width:1000px; margin:40px auto; padding:0 24px; }
-.dash-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:32px; }
-.dash-header h1 { font-size:28px; }
-.dash-grid { display:grid; grid-template-columns:2fr 1fr; gap:24px; }
-.dash-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:24px; }
-.dash-card h3 { font-size:16px; font-weight:700; margin-bottom:16px; }
-.plan-item { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); align-items:flex-start; }
-.plan-check { width:24px; height:24px; border-radius:50%; background:var(--gold-light); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
-.plan-item.completed .plan-check { background:#22C55E; color:#fff; }
-.plan-text { font-size:14px; }
-.plan-text small { color:var(--text3); display:block; }
-.progress-bar { height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; margin:8px 0 16px; }
-.progress-fill { height:100%; background:var(--gold); border-radius:4px; transition:width .5s; }
+/* ── Menu dropdown ── */
+.menu { position:absolute; top:50px; right:16px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:0 4px 20px rgba(0,0,0,.1); z-index:200; min-width:180px; overflow:hidden; display:none; }
+.menu.open { display:block; }
+.menu-item { padding:12px 16px; font-size:14px; cursor:pointer; display:flex; gap:8px; align-items:center; transition:background .15s; border-bottom:1px solid var(--border); }
+.menu-item:last-child { border-bottom:none; }
+.menu-item:hover { background:var(--bg2); }
 
-/* ── Tutor Chat ── */
-.tutor { max-width:800px; margin:40px auto; padding:0 24px; display:flex; flex-direction:column; height:calc(100vh - 80px); }
-.tutor-header { text-align:center; margin-bottom:20px; }
-.tutor-header h1 { font-size:24px; }
-.tutor-modes { display:flex; gap:8px; justify-content:center; margin:12px 0; }
-.mode-chip { padding:8px 16px; border-radius:99px; border:1px solid var(--border); cursor:pointer; font-size:13px; font-weight:500; background:var(--bg); transition:all .2s; }
-.mode-chip.active { background:var(--gold); color:#fff; border-color:var(--gold); }
-.tutor-chat { flex:1; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius); padding:20px; background:var(--bg2); display:flex; flex-direction:column; gap:16px; }
-.chat-msg { max-width:85%; padding:14px 18px; border-radius:18px; font-size:14px; line-height:1.5; animation:fadeIn .3s; }
-.chat-msg.user { align-self:flex-end; background:var(--blue); color:#fff; border-bottom-right-radius:6px; }
-.chat-msg.ai { align-self:flex-start; background:#fff; border:1px solid var(--border); border-bottom-left-radius:6px; }
-.chat-msg.ai pre { background:var(--bg3); padding:12px; border-radius:8px; overflow-x:auto; font-size:13px; margin:8px 0; }
-.tutor-input { display:flex; gap:8px; padding:12px 0; align-items:center; }
-.tutor-input input { flex:1; padding:14px 18px; border:2px solid var(--border); border-radius:99px; font-size:15px; font-family:var(--font); outline:none; transition:border .2s; }
-.tutor-input input:focus { border-color:var(--gold); }
-.cam-btn { width:44px; height:44px; border-radius:50%; border:2px solid var(--border); background:var(--bg); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; flex-shrink:0; }
-.cam-btn:hover { border-color:var(--gold); background:var(--gold-light); }
-.cam-btn.recording { background:#EF4444; border-color:#EF4444; animation:pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
-.chat-img { max-width:200px; border-radius:12px; margin-top:8px; border:1px solid var(--border); }
-.chat-msg.user .chat-img { border-color:rgba(255,255,255,.2); }
-.analysis-badge { display:inline-block; padding:3px 10px; border-radius:99px; background:var(--gold-light); color:var(--gold-dark); font-size:11px; font-weight:600; margin-bottom:6px; }
-#camInput { display:none; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+/* ── Containers ── */
+.app { display:flex; flex-direction:column; height:100dvh; }
+.page { display:none; flex-direction:column; flex:1; overflow:hidden; }
+.page.active { display:flex; }
 
-/* ── Exam Prep ── */
-.exam { max-width:700px; margin:40px auto; padding:0 24px; }
-.exam h1 { font-size:28px; margin-bottom:8px; }
-.exam-steps { display:flex; gap:24px; margin:32px 0; }
-.exam-step { flex:1; text-align:center; position:relative; }
-.exam-step::after { content:''; position:absolute; top:18px; left:calc(50% + 24px); width:calc(100% - 48px); height:2px; background:var(--border); }
-.exam-step:last-child::after { display:none; }
-.step-num { width:36px; height:36px; border-radius:50%; background:var(--bg3); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-weight:700; font-size:14px; }
-.exam-step.done .step-num { background:var(--gold); color:#fff; }
-.exam-step.active .step-num { background:var(--blue); color:#fff; }
-.exam-step p { font-size:13px; color:var(--text2); }
-.upload-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:60px 24px; text-align:center; cursor:pointer; transition:all .2s; margin-bottom:24px; }
-.upload-zone:hover { border-color:var(--gold); background:var(--gold-light); }
-.upload-zone .icon { font-size:48px; margin-bottom:12px; }
-.upload-zone p { color:var(--text2); font-size:14px; }
-.exam-plan { display:none; }
-.exam-plan.visible { display:block; }
-
-/* ── Footer ── */
-footer { border-top:1px solid var(--border); padding:40px 24px; text-align:center; color:var(--text3); font-size:13px; }
+/* ── About page ── */
+.about { overflow-y:auto; padding:24px 16px; }
+.about h2 { font-size:20px; margin:24px 0 12px; }
+.about p { color:var(--text2); font-size:14px; margin-bottom:16px; }
+.about .feature-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+.about .feature-mini { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; text-align:center; }
+.about .feature-mini .icon { font-size:28px; margin-bottom:6px; }
+.about .feature-mini h4 { font-size:13px; font-weight:700; }
+.about .feature-mini p { font-size:11px; margin-top:4px; }
+.about .testimonial { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; margin-bottom:12px; }
+.about .stars { color:var(--gold); }
 
 /* ── Mobile ── */
-@media (max-width:768px) {
-  .nav-links { display:none; }
-  .dash-grid { grid-template-columns:1fr; }
-  .hero { padding:48px 16px 40px; }
-  .section { padding:48px 16px; }
-  .hero-stats { gap:24px; }
-  .exam-steps { flex-direction:column; gap:12px; }
-  .exam-step::after { display:none; }
-  .features, .products, .testimonials { grid-template-columns:1fr; }
-  .chat-msg { max-width:90%; }
-}
 @media (max-width:480px) {
-  .hero h1 { font-size:28px; }
-  .hero-buttons { flex-direction:column; }
-  .btn-lg { width:100%; justify-content:center; }
+  .chat-msg { max-width:92%; font-size:13px; }
+  .mode-bar { padding:6px 10px; gap:4px; }
+  .mode-chip { padding:5px 10px; font-size:11px; }
+  .topbar h1 { font-size:16px; }
 }
 </style>
 </head>
 <body>
+<div class="app" id="app">
 
-<!-- ── NAV ── -->
-<nav>
-  <div class="nav-logo">Study<span>Forge</span></div>
-  <div class="nav-links">
-    <a href="#" onclick="showScreen('home')">Home</a>
-    <a href="#" onclick="showScreen('tutor')">AI Tutor</a>
-    <a href="#" onclick="showScreen('exam')">Exam Prep</a>
-    <a href="#" onclick="showScreen('dash')">Dashboard</a>
-    <button class="btn btn-gold" onclick="showScreen('onboard')">Try Free</button>
+<!-- ═══ CHAT PAGE (home) ═══ -->
+<div class="page active" id="page-chat">
+  <div class="topbar">
+    <h1>Study<span>Forge</span></h1>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="showAbout()" title="About">ℹ️</button>
+      <button class="icon-btn" onclick="showWelcome()" title="Subjects">📚</button>
+    </div>
   </div>
-</nav>
-
-<!-- ═══════════════ HOME ═══════════════ -->
-<div class="screen active" id="screen-home">
-  <section class="hero">
-    <div class="hero-badge">⭐ 4.87 · Trusted by 1M+ students</div>
-    <h1>Your <span>AI tutor</span> for every subject. Any time. Any level.</h1>
-    <p>Get step-by-step explanations, personalized study plans, and exam prep — all in one place. Master math, physics, chemistry, history, and 10+ more subjects.</p>
-    <div class="hero-buttons">
-      <button class="btn btn-gold btn-lg" onclick="showScreen('onboard')">Try for free →</button>
-      <button class="btn btn-outline btn-lg" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">See features ↓</button>
-    </div>
-    <div class="hero-stats">
-      <div class="stat"><div class="stat-num">1M+</div><div class="stat-label">Students</div></div>
-      <div class="stat"><div class="stat-num">14</div><div class="stat-label">Subjects</div></div>
-      <div class="stat"><div class="stat-num">77×</div><div class="stat-label">Cheaper than a tutor</div></div>
-      <div class="stat"><div class="stat-num">2.0</div><div class="stat-label">Avg grade boost</div></div>
-    </div>
-  </section>
-
-  <section class="section" id="products">
-    <h2>Everything you need to study smarter</h2>
-    <p class="section-sub">Three powerful tools. One unified experience.</p>
-    <div class="products">
-      <div class="product-card">
-        <div class="product-img" style="background:linear-gradient(135deg,#EEF2FF,#C7D2FE)">🤖</div>
-        <div class="product-body">
-          <h3>AI Tutor</h3>
-          <p>Real-time help tailored to your needs. Snap a photo of any problem and get step-by-step guidance that adapts to your level. Available 24/7 — no appointments, no waiting.</p>
-          <button class="btn btn-gold" onclick="showScreen('tutor')">Try AI Tutor →</button>
-        </div>
-      </div>
-      <div class="product-card">
-        <div class="product-img" style="background:linear-gradient(135deg,#FEF3C7,#FDE68A)">📝</div>
-        <div class="product-body">
-          <h3>Exam Prep</h3>
-          <p>Upload your study materials, set your exam date, and get a personalized study plan. Flashcards, practice tests, and spaced repetition — all generated automatically.</p>
-          <button class="btn btn-gold" onclick="showScreen('exam')">Start Exam Prep →</button>
-        </div>
-      </div>
-      <div class="product-card">
-        <div class="product-img" style="background:linear-gradient(135deg,#D1FAE5,#A7F3D0)">🎯</div>
-        <div class="product-body">
-          <h3>Socratic Mode</h3>
-          <p>Go deep. Instead of just getting answers, Socratic Mode guides you through concepts with questions — building real understanding. Perfect for mastering difficult topics.</p>
-          <button class="btn btn-gold" onclick="showScreen('tutor');setMode('socratic')">Try Socratic →</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>How it works</h2>
-    <p class="section-sub">From confused to confident in four steps.</p>
-    <div class="features">
-      <div class="feature-card"><span class="feature-icon">📸</span><h3>1. Snap a Problem</h3><p>Take a photo of any homework question, exam problem, or textbook page. Our AI reads and understands it instantly.</p></div>
-      <div class="feature-card"><span class="feature-icon">🧠</span><h3>2. Get Step-by-Step Help</h3><p>Not just the answer — every step explained. If you're stuck, ask follow-up questions just like a real tutor.</p></div>
-      <div class="feature-card"><span class="feature-icon">📊</span><h3>3. Practice & Review</h3><p>Auto-generated flashcards, quizzes, and spaced repetition target your weak spots until you've mastered them.</p></div>
-      <div class="feature-card"><span class="feature-icon">🎯</span><h3>4. Ace Your Exams</h3><p>Personalized exam prep plans, practice tests, and progress tracking so you walk in confident.</p></div>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>What students say</h2>
-    <p class="section-sub">Real results. Real confidence.</p>
-    <div class="testimonials">
-      <div class="testimonial"><div class="stars">★★★★★</div><p>"I started studying with StudyForge the night before my exam having understood absolutely nothing. By the next morning I understood everything. I walked in confident and came out with a grade I never thought possible."</p><div class="author">— Sarah K., High School Junior</div></div>
-      <div class="testimonial"><div class="stars">★★★★★</div><p>"My overall school average went from 3.57 all the way up to a perfect 5.00. StudyForge doesn't let you move on until you genuinely understand — and that changes absolutely everything."</p><div class="author">— Marcus T., University Student</div></div>
-      <div class="testimonial"><div class="stars">★★★★★</div><p>"I skipped chemistry class for two months and then learned the entire subject in one week. Got a solid grade and didn't stress once. This app operates on a completely different level."</p><div class="author">— Jamie L., College Freshman</div></div>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>Frequently Asked Questions</h2>
-    <div class="faq">
-      <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">What subjects does StudyForge cover? <span>+</span></div><div class="faq-a">Mathematics, Physics, Chemistry, Biology, History, Economics, English, Computer Science, Psychology, Sociology, Geography, Languages, Law, and Business — 14 subjects with curriculum-aligned content.</div></div>
-      <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">How is StudyForge different from ChatGPT? <span>+</span></div><div class="faq-a">ChatGPT gives you answers. StudyForge teaches you. We provide step-by-step guidance, personalized learning plans, auto-generated flashcards, exam prep, and progress tracking — purpose-built for learning, not just chatting.</div></div>
-      <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Can StudyForge adapt to my learning pace? <span>+</span></div><div class="faq-a">Yes. StudyForge identifies your weak spots, adjusts difficulty based on your performance, and suggests what to study next. It won't move on until you truly understand.</div></div>
-      <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Is there a free trial? <span>+</span></div><div class="faq-a">Yes! Start for free with daily limits on all features. Upgrade to Plus for unlimited access — 77× cheaper than a private tutor.</div></div>
-    </div>
-  </section>
-
-  <div class="cta">
-    <h2>Ready to transform your studying?</h2>
-    <p>Join 1M+ students already studying smarter.</p>
-    <button class="btn btn-gold btn-lg" onclick="showScreen('onboard')">Get Started Free →</button>
+  <div class="mode-bar">
+    <button class="mode-chip active" data-mode="solve" onclick="setMode('solve')">🧮 Solver</button>
+    <button class="mode-chip" data-mode="socratic" onclick="setMode('socratic')">💭 Socratic</button>
+    <button class="mode-chip" data-mode="explain" onclick="setMode('explain')">📖 Explain</button>
   </div>
-
-  <footer>
-    <p>© 2026 StudyForge — Built for the next generation of learners.</p>
-  </footer>
-</div>
-
-<!-- ═══════════════ ONBOARDING ═══════════════ -->
-<div class="screen" id="screen-onboard">
-  <div class="onboard">
-    <h1>👋 Welcome to StudyForge</h1>
-    <p>Select the subjects you want to master. We'll build your personalized study plan.</p>
-    <div class="subject-grid" id="subjectGrid"></div>
-    <button class="btn btn-gold btn-lg" onclick="completeOnboarding()" style="width:100%">Start Learning →</button>
+  <div class="chat" id="chat">
+    <div class="chat-msg ai">
+      👋 <strong>Hi! I'm your AI tutor.</strong><br><br>
+      📷 <strong>Snap a photo</strong> of any homework problem<br>
+      💬 <strong>Ask me anything</strong> — math, physics, chemistry, history...<br>
+      🎯 <strong>Pick a mode</strong> above — Solver, Socratic, or Explain<br><br>
+      <span style="font-size:12px;opacity:.6">Powered by Nano Banana 2 + Higgsfield AI</span>
+    </div>
+  </div>
+  <div class="input-bar">
+    <input type="file" id="camInput" accept="image/*" capture="environment" onchange="capturePhoto(this)">
+    <button class="cam-btn" onclick="document.getElementById('camInput').click()" title="Snap a photo">📷</button>
+    <input type="text" id="msgInput" placeholder="Ask anything or snap a photo..." onkeydown="if(event.key==='Enter')send()">
+    <button class="send-btn" onclick="send()">➤</button>
   </div>
 </div>
 
-<!-- ═══════════════ DASHBOARD ═══════════════ -->
-<div class="screen" id="screen-dash">
-  <div class="dash">
-    <div class="dash-header">
-      <div><h1>📊 Your Dashboard</h1><p style="color:var(--text2)">Welcome back! Here's your progress.</p></div>
-      <button class="btn btn-gold" onclick="showScreen('tutor')">Start Studying →</button>
-    </div>
-    <div class="dash-grid">
-      <div class="dash-card">
-        <h3>📅 Today's Study Plan</h3>
-        <div id="planList"></div>
-      </div>
-      <div>
-        <div class="dash-card" style="margin-bottom:16px">
-          <h3>📈 Overall Progress</h3>
-          <div class="progress-bar"><div class="progress-fill" id="overallProgress" style="width:38%"></div></div>
-          <small style="color:var(--text2)">38% of your study plan</small>
-        </div>
-        <div class="dash-card">
-          <h3>🔥 Streak</h3>
-          <div style="font-size:36px;font-weight:800;color:var(--gold)">7 days</div>
-          <small style="color:var(--text2)">Keep it going!</small>
-        </div>
-      </div>
+<!-- ═══ WELCOME (subject picker) ═══ -->
+<div class="page" id="page-welcome">
+  <div class="topbar">
+    <h1>Study<span>Forge</span></h1>
+    <button class="icon-btn" onclick="goHome()">✕</button>
+  </div>
+  <div class="chat" style="overflow-y:auto">
+    <div class="welcome">
+      <div class="welcome-icon">📚</div>
+      <h2>What are you studying?</h2>
+      <p>Pick your subjects and we'll tailor the help to your needs.</p>
+      <div class="subject-grid" id="subjectGrid"></div>
+      <button class="cam-btn" style="width:auto;border-radius:99px;padding:12px 24px;font-size:15px;font-weight:600" onclick="saveSubjects()">Start Learning →</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════ AI TUTOR ═══════════════ -->
-<div class="screen" id="screen-tutor">
-  <div class="tutor">
-    <div class="tutor-header">
-      <h1>🤖 AI Tutor</h1>
-      <div class="tutor-modes">
-        <button class="mode-chip active" data-mode="solve" onclick="setMode('solve')">Solver Mode</button>
-        <button class="mode-chip" data-mode="socratic" onclick="setMode('socratic')">Socratic Mode</button>
-        <button class="mode-chip" data-mode="explain" onclick="setMode('explain')">Explain Concept</button>
-      </div>
+<!-- ═══ ABOUT PAGE ═══ -->
+<div class="page" id="page-about">
+  <div class="topbar">
+    <h1>Study<span>Forge</span></h1>
+    <button class="icon-btn" onclick="goHome()">✕</button>
+  </div>
+  <div class="about">
+    <h2>📸 Snap. Learn. Ace it.</h2>
+    <p>Take a photo of any homework problem and our AI — powered by <strong>Nano Banana 2</strong> via Higgsfield — reads it, solves it, and explains every step. Math, physics, chemistry, biology, history, economics, and 8 more subjects.</p>
+
+    <h2>🧠 How it works</h2>
+    <div class="feature-row">
+      <div class="feature-mini"><div class="icon">📷</div><h4>Snap a problem</h4><p>Camera opens. You take the photo. Instant.</p></div>
+      <div class="feature-mini"><div class="icon">🔍</div><h4>AI analyzes it</h4><p>Nano Banana 2 identifies the problem type and content.</p></div>
+      <div class="feature-mini"><div class="icon">🧮</div><h4>Step-by-step solve</h4><p>Not just the answer — every step explained.</p></div>
+      <div class="feature-mini"><div class="icon">💬</div><h4>Ask follow-ups</h4><p>Stuck? Ask questions like a real tutor.</p></div>
     </div>
-    <div class="tutor-chat" id="tutorChat">
-      <div class="chat-msg ai">👋 Hi! I'm your AI tutor. Ask me anything — snap a problem, ask for an explanation, or upload your homework. I'll walk you through it step by step.</div>
+
+    <h2>⭐ What students say</h2>
+    <div class="testimonial">
+      <div class="stars">★★★★★</div>
+      <p style="font-size:13px;font-style:italic">"I snap a photo of my homework and within seconds I have a full explanation. Went from failing to a B+ in one semester."</p>
+      <strong style="font-size:12px">— Jamie L., College Freshman</strong>
     </div>
-    <div class="tutor-input">
-      <input type="file" id="camInput" accept="image/*" capture="environment" onchange="handleCameraCapture(this)">
-      <button class="cam-btn" onclick="document.getElementById('camInput').click()" title="Snap a photo">📷</button>
-      <input type="text" id="tutorInput" placeholder="Ask anything — e.g. 'Solve 3x²+5x-2=0' or snap a photo 📷..." onkeydown="if(event.key==='Enter')sendTutor()">
-      <button class="btn btn-gold" onclick="sendTutor()">Send</button>
+    <div class="testimonial">
+      <div class="stars">★★★★★</div>
+      <p style="font-size:13px;font-style:italic">"Available at 2am when you're panicking, never loses patience, always finds a new way to explain."</p>
+      <strong style="font-size:12px">— Sarah K., High School Junior</strong>
     </div>
+
+    <h2>💰 Pricing</h2>
+    <p><strong>Free tier</strong> — 5 photo analyses per day, unlimited text chat<br>
+    <strong>Plus</strong> — Unlimited everything. 77× cheaper than a private tutor.</p>
   </div>
 </div>
 
-<!-- ═══════════════ EXAM PREP ═══════════════ -->
-<div class="screen" id="screen-exam">
-  <div class="exam">
-    <h1>📝 Exam Prep</h1>
-    <p style="color:var(--text2)">Upload your materials, set your exam date, and get a personalized study plan.</p>
-    <div class="exam-steps">
-      <div class="exam-step done" id="step1"><div class="step-num">1</div><p>Upload Materials</p></div>
-      <div class="exam-step active" id="step2"><div class="step-num">2</div><p>Set Exam Date</p></div>
-      <div class="exam-step" id="step3"><div class="step-num">3</div><p>Get Plan</p></div>
-    </div>
-    <div class="upload-zone" onclick="simulateUpload()" id="uploadZone">
-      <div class="icon">📤</div>
-      <p><strong>Click to upload</strong> or drag & drop</p>
-      <p style="font-size:12px;margin-top:4px">PDF, DOCX, images, or text notes</p>
-    </div>
-    <div style="margin-bottom:24px">
-      <label style="display:block;font-weight:600;margin-bottom:8px">📅 Exam Date</label>
-      <input type="date" id="examDate" style="padding:12px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:15px;width:100%;font-family:var(--font)">
-    </div>
-    <button class="btn btn-gold btn-lg" onclick="generatePlan()" style="width:100%">Generate Study Plan →</button>
-    <div class="exam-plan" id="examPlan">
-      <h3 style="margin-top:32px">✅ Your Study Plan</h3>
-      <div id="examPlanContent" style="margin-top:16px"></div>
-    </div>
-  </div>
 </div>
 
 <script>
-// ── Screen Navigation ──
-function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById('screen-' + name);
-  if (el) { el.classList.add('active'); window.scrollTo(0,0); }
-  if (name === 'dash') renderDashboard();
-  if (name === 'onboard') renderSubjects();
-}
-
-// ── Subjects ──
 const SUBJECTS = [
   {name:'Mathematics',icon:'📐'},{name:'Physics',icon:'⚡'},{name:'Chemistry',icon:'🧪'},
   {name:'Biology',icon:'🧬'},{name:'History',icon:'📜'},{name:'Economics',icon:'📈'},
@@ -394,50 +195,33 @@ const SUBJECTS = [
   {name:'Geography',icon:'🌍'},{name:'Languages',icon:'🗣️'},{name:'Law',icon:'⚖️'},
   {name:'Business',icon:'💼'},{name:'Sociology',icon:'👥'}
 ];
-let selectedSubjects = new Set();
+let selectedSubjects = new Set(['Mathematics']);
+let tutorMode = 'solve';
 
+// ── Navigation ──
+function goHome() { showPage('chat'); }
+function showAbout() { showPage('about'); }
+function showWelcome() { showPage('welcome'); renderSubjects(); }
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+}
+
+// ── Subjects ──
 function renderSubjects() {
-  const grid = document.getElementById('subjectGrid');
-  grid.innerHTML = SUBJECTS.map(s => `
+  document.getElementById('subjectGrid').innerHTML = SUBJECTS.map(s => `
     <div class="subject-chip${selectedSubjects.has(s.name)?' selected':''}" onclick="toggleSubject('${s.name}',this)">
       <span class="icon">${s.icon}</span>${s.name}
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
 function toggleSubject(name, el) {
-  if (selectedSubjects.has(name)) { selectedSubjects.delete(name); el.classList.remove('selected'); }
-  else { selectedSubjects.add(name); el.classList.add('selected'); }
+  selectedSubjects.has(name) ? (selectedSubjects.delete(name), el.classList.remove('selected'))
+    : (selectedSubjects.add(name), el.classList.add('selected'));
 }
-
-function completeOnboarding() {
-  if (selectedSubjects.size === 0) { selectedSubjects.add('Mathematics'); }
-  showScreen('dash');
-  renderDashboard();
+function saveSubjects() {
+  if (selectedSubjects.size === 0) selectedSubjects.add('Mathematics');
+  goHome();
 }
-
-// ── Dashboard ──
-function renderDashboard() {
-  const subjects = [...selectedSubjects].length ? [...selectedSubjects] : ['Mathematics','Physics','Chemistry'];
-  const planList = document.getElementById('planList');
-  const items = [
-    {text:`Review ${subjects[0]} fundamentals`,sub:'Chapter 3 — Key Concepts',done:true},
-    {text:`Practice ${subjects[0]} problems`,sub:'Exercise Set A — 10 problems',done:false},
-    {text:`Study ${subjects[1] || subjects[0]} formulas`,sub:'Formula sheet review',done:false},
-    {text:`Quiz: ${subjects[0]} — Weekly assessment`,sub:'20 questions · 30 min',done:false},
-    {text:`Flashcard review`,sub:`${subjects.length} subjects · Spaced repetition`,done:false},
-  ];
-  planList.innerHTML = items.map((item,i) => `
-    <div class="plan-item${item.done?' completed':''}">
-      <div class="plan-check">${item.done?'✓':i+1}</div>
-      <div class="plan-text">${item.text}<small>${item.sub}</small></div>
-    </div>
-  `).join('');
-}
-
-// ── AI Tutor ──
-let tutorMode = 'solve';
-let pendingImage = null; // base64 data URL of captured image
 
 function setMode(mode) {
   tutorMode = mode;
@@ -445,227 +229,128 @@ function setMode(mode) {
   document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
 }
 
-function handleCameraCapture(input) {
+// ── Chat ──
+function addMsg(role, html) {
+  const chat = document.getElementById('chat');
+  chat.innerHTML += `<div class="chat-msg ${role}">${html}</div>`;
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function send() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text) return;
+  addMsg('user', escapeHtml(text));
+  input.value = '';
+
+  const aiHtml = '<span class="badge badge-ai">Thinking...</span>';
+  addMsg('ai', aiHtml);
+  const aiDivs = document.querySelectorAll('#chat .chat-msg.ai');
+  const aiDiv = aiDivs[aiDivs.length-1];
+
+  setTimeout(() => {
+    let resp;
+    if (tutorMode === 'socratic') {
+      resp = `🤔 <strong>Let me ask you instead:</strong> What do you already know about this topic?<br><br>Take your time — understanding where you're starting from helps me guide you better.`;
+    } else if (tutorMode === 'explain') {
+      resp = `📚 <strong>Concept Overview</strong><br><br><strong>What it is:</strong> A foundational idea that connects to multiple topics.<br><br><strong>Why it matters:</strong> Mastering this opens up [related concepts].<br><br><strong>Key principles:</strong><br>1. Core mechanism<br>2. Real-world application<br>3. Common edge cases<br><br><strong>Watch out for:</strong> Students often [common mistake]. Here's the fix...<br><br>Want me to go deeper on any part?`;
+    } else {
+      const lower = text.toLowerCase();
+      if (lower.includes('3x²')||lower.includes('3x^2')||lower.includes('quadratic')) {
+        resp = `<strong>Quadratic:</strong> <code>3x²+5x-2=0</code><br><br>
+<strong>Step 1:</strong> <code>a=3, b=5, c=-2</code><br>
+<strong>Step 2:</strong> Discriminant: <code>25+24=49</code><br>
+<strong>Step 3:</strong> <code>√49=7</code><br>
+<strong>Step 4:</strong> <code>x=(-5±7)/6</code><br>
+<strong>Step 5:</strong> <code>x=⅓, x=-2</code><br><br>
+✅ <strong>Answer: x = 1/3 or x = -2</strong>`;
+      } else {
+        resp = `<strong>Here's the breakdown:</strong><br><br>
+<strong>Step 1:</strong> Identify what we're solving for.<br>
+<strong>Step 2:</strong> Apply the relevant formula.<br>
+<strong>Step 3:</strong> Work through the calculation.<br>
+<strong>Step 4:</strong> Verify the answer.<br><br>
+💡 <em>Tip: I can generate practice problems — just ask!</em><br><br>
+What part would you like me to explain more?`;
+      }
+    }
+    aiDiv.innerHTML = resp;
+    document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+  }, 600);
+}
+
+// ── Camera + Nano Banana ──
+function capturePhoto(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    pendingImage = reader.result;
-    const chat = document.getElementById('tutorChat');
-    chat.innerHTML += `<div class="chat-msg user">
-      <div class="analysis-badge">📷 Photo captured</div>
-      <img src="${pendingImage}" class="chat-img" alt="Captured problem">
-      <div style="margin-top:6px;font-size:12px;opacity:.7">Analyzing with Nano Banana...</div>
-    </div>`;
-    chat.scrollTop = chat.scrollHeight;
-    analyzeImage(pendingImage);
+    const dataUrl = reader.result;
+    addMsg('user', `<img src="${dataUrl}" alt="Captured"><div class="chat-img-label"><span class="badge badge-cam">📷 Photo</span> Analyzing...</div>`);
+    analyzeWithNanoBanana(dataUrl);
   };
   reader.readAsDataURL(file);
   input.value = '';
 }
 
-function analyzeImage(dataUrl) {
-  const chat = document.getElementById('tutorChat');
+function analyzeWithNanoBanana(dataUrl) {
+  const chat = document.getElementById('chat');
   const aiDiv = document.createElement('div');
   aiDiv.className = 'chat-msg ai';
-  aiDiv.innerHTML = '<span class="analysis-badge">🔍 Nano Banana Vision</span><br>Scanning image...';
+  aiDiv.innerHTML = '<span class="badge badge-ai">🔍 Nano Banana 2</span> Scanning...';
   chat.appendChild(aiDiv);
   chat.scrollTop = chat.scrollHeight;
 
-  // Simulate Nano Banana analysis (in production: POST to Higgsfield API)
   setTimeout(() => {
     const analyses = [
-      `<span class="analysis-badge">🔍 Nano Banana Vision — Analysis</span><br><br>
-<strong>Detected:</strong> Handwritten math problem<br><br>
-<strong>Problem identified:</strong> Quadratic equation — appears to be <code>2x²+7x-15=0</code><br><br>
-<strong>Step-by-step solution:</strong><br><br>
-<strong>Step 1:</strong> Identify coefficients: <code>a=2, b=7, c=-15</code><br><br>
-<strong>Step 2:</strong> Quadratic formula: <code>x = (-b ± √(b²-4ac)) / 2a</code><br><br>
-<strong>Step 3:</strong> Discriminant: <code>49 - 4(2)(-15) = 49+120 = 169</code><br><br>
-<strong>Step 4:</strong> <code>√169 = 13</code><br><br>
-<strong>Step 5:</strong> <code>x = (-7 ± 13) / 4</code><br><br>
-<strong>Step 6:</strong> <code>x₁ = 6/4 = 3/2</code>, <code>x₂ = -20/4 = -5</code><br><br>
-✅ <strong>Answer:</strong> <code>x = 1.5</code> or <code>x = -5</code><br><br>
-<em>Powered by Nano Banana 2 — Higgsfield AI</em>`,
+      `<span class="badge badge-ai">🔍 Nano Banana 2 — Math</span><br><br>
+<strong>Detected:</strong> Quadratic equation<br>
+<strong>Problem:</strong> <code>2x²+7x-15=0</code><br><br>
+<strong>Solution:</strong><br>
+• Coefficients: <code>a=2, b=7, c=-15</code><br>
+• Discriminant: <code>49-4(2)(-15)=169</code><br>
+• <code>√169=13</code><br>
+• <code>x=(-7±13)/4</code><br>
+• <code>x₁=1.5, x₂=-5</code><br><br>
+✅ <strong>Answer: x = 3/2 or x = -5</strong><br><br>
+<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`,
 
-      `<span class="analysis-badge">🔍 Nano Banana Vision — Analysis</span><br><br>
-<strong>Detected:</strong> Physics diagram — forces on an inclined plane<br><br>
-<strong>Key observations:</strong><br>
-• Object on a ramp at angle θ<br>
-• Gravity (<code>mg</code>) pulling straight down<br>
-• Normal force (<code>N</code>) perpendicular to surface<br>
-• Friction (<code>f</code>) opposing motion<br><br>
-<strong>Decomposition:</strong><br>
-• Parallel component: <code>mg·sin(θ)</code> pulls object down ramp<br>
-• Perpendicular component: <code>mg·cos(θ)</code> balanced by normal force<br><br>
-<strong>Net force:</strong> <code>F = mg·sin(θ) - f</code><br>
-<strong>Acceleration:</strong> <code>a = g·sin(θ) - f/m</code><br><br>
-Would you like me to work through a specific angle and mass?<br><br>
-<em>Powered by Nano Banana 2 — Higgsfield AI</em>`,
+      `<span class="badge badge-ai">🔍 Nano Banana 2 — Physics</span><br><br>
+<strong>Detected:</strong> Forces on an inclined plane<br><br>
+<strong>Breakdown:</strong><br>
+• Gravity: <code>mg</code> straight down<br>
+• Parallel: <code>mg·sin(θ)</code> down ramp<br>
+• Normal: <code>N = mg·cos(θ)</code><br>
+• Friction: <code>f = μN</code> opposing motion<br><br>
+<strong>Net force:</strong> <code>F = mg·sin(θ) - μmg·cos(θ)</code><br>
+<strong>Acceleration:</strong> <code>a = g(sin θ - μ·cos θ)</code><br><br>
+<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`,
 
-      `<span class="analysis-badge">🔍 Nano Banana Vision — Analysis</span><br><br>
-<strong>Detected:</strong> Chemistry molecular structure<br><br>
-<strong>Molecule:</strong> Appears to be glucose (<code>C₆H₁₂O₆</code>)<br><br>
-<strong>Structure type:</strong> Ring form (pyranose) — 6-membered ring with oxygen<br><br>
-<strong>Key features:</strong><br>
+      `<span class="badge badge-ai">🔍 Nano Banana 2 — Chemistry</span><br><br>
+<strong>Detected:</strong> Molecular structure — Glucose<br>
+<strong>Formula:</strong> <code>C₆H₁₂O₆</code><br><br>
+<strong>Structure:</strong> 6-membered pyranose ring<br>
 • 5 hydroxyl (<code>-OH</code>) groups<br>
-• 1 aldehyde group in open-chain form<br>
-• Chiral centers at carbons 2, 3, 4, and 5<br><br>
-<strong>Biological role:</strong> Primary energy source for cells. Produced by photosynthesis, metabolized via glycolysis and the Krebs cycle.<br><br>
-<em>Powered by Nano Banana 2 — Higgsfield AI</em>`
+• 4 chiral centers (C2, C3, C4, C5)<br>
+• Primary energy source for cells<br><br>
+<strong>Pathways:</strong> Glycolysis → Krebs cycle → ETC<br><br>
+<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`,
+
+      `<span class="badge badge-ai">🔍 Nano Banana 2 — General</span><br><br>
+<strong>I can see:</strong> Handwritten notes / textbook page<br><br>
+<strong>Key topics identified:</strong><br>
+• Main concept clearly stated<br>
+• Supporting examples visible<br>
+• Formula/equation present<br><br>
+Let me know which specific problem or concept you want me to work through!<br><br>
+<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`
     ];
     aiDiv.innerHTML = analyses[Math.floor(Math.random() * analyses.length)];
     chat.scrollTop = chat.scrollHeight;
-  }, 1500);
-}
-
-const TUTOR_RESPONSES = {
-  solve: {
-    '3x²+5x-2=0': `**Step 1:** Identify coefficients: \`a=3, b=5, c=-2\`
-
-**Step 2:** Use the quadratic formula: \`x = (-b ± √(b²-4ac)) / 2a\`
-
-**Step 3:** Calculate discriminant: \`b²-4ac = 25-4(3)(-2) = 25+24 = 49\`
-
-**Step 4:** \`√49 = 7\`
-
-**Step 5:** \`x = (-5 ± 7) / 6\`
-
-**Step 6:** \`x₁ = (-5+7)/6 = 2/6 = 1/3\`
-\`x₂ = (-5-7)/6 = -12/6 = -2\`
-
-✅ **Answer:** \`x = 1/3\` or \`x = -2\`
-
-Would you like me to explain any step in more detail?`,
-    default: `Great question! Let me walk you through this step by step.
-
-**Step 1:** First, let's identify what we're working with.
-
-**Step 2:** Break down the problem into smaller parts.
-
-**Step 3:** Apply the relevant formula or concept.
-
-**Step 4:** Check your answer.
-
-💡 *Tip: Try similar problems to reinforce your understanding. I can generate practice questions if you'd like!*
-
-What specific part would you like me to explain more?`
-  },
-  socratic: {
-    default: `🤔 Let me ask you a question instead: What do you already know about this topic?
-
-Take your time — there's no wrong answer. Understanding where you're starting from helps me guide you better.
-
-What's your first thought?`
-  },
-  explain: {
-    default: `📚 **Concept Overview**
-
-Let me break this down clearly:
-
-**What it is:** This is a fundamental concept that connects to several other topics.
-
-**Why it matters:** Understanding this unlocks [related topics].
-
-**Key points:**
-1. First principle
-2. Second principle  
-3. Application
-
-**Common mistake to avoid:** Many students [common error]. Here's how to avoid it...
-
-Would you like me to go deeper into any specific aspect?`
-  }
-};
-
-function sendTutor() {
-  const input = document.getElementById('tutorInput');
-  const text = input.value.trim();
-  if (!text) return;
-  const chat = document.getElementById('tutorChat');
-
-  // User message
-  chat.innerHTML += `<div class="chat-msg user">${escapeHtml(text)}</div>`;
-  input.value = '';
-
-  // AI thinking
-  const aiDiv = document.createElement('div');
-  aiDiv.className = 'chat-msg ai';
-  aiDiv.textContent = 'Thinking...';
-  chat.appendChild(aiDiv);
-  chat.scrollTop = chat.scrollHeight;
-
-  // Simulate AI response (with delay for realism)
-  setTimeout(() => {
-    let response;
-    const lower = text.toLowerCase();
-    if (lower.includes('3x²') || lower.includes('3x^2') || lower.includes('quadratic')) {
-      response = TUTOR_RESPONSES.solve['3x²+5x-2=0'];
-    } else if (tutorMode === 'socratic') {
-      response = TUTOR_RESPONSES.socratic.default;
-    } else if (tutorMode === 'explain') {
-      response = TUTOR_RESPONSES.explain.default;
-    } else {
-      response = TUTOR_RESPONSES.solve.default;
-    }
-    aiDiv.innerHTML = formatMarkdown(response);
-    chat.scrollTop = chat.scrollHeight;
-  }, 800);
-}
-
-function formatMarkdown(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br>');
+  }, 1200);
 }
 
 function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ── Exam Prep ──
-function simulateUpload() {
-  document.getElementById('step1').classList.add('done');
-  document.getElementById('step2').classList.add('active');
-  document.getElementById('uploadZone').innerHTML = '<div class="icon">✅</div><p><strong>Materials uploaded!</strong></p><p style="font-size:12px">chemistry_notes.pdf, chapter_review.docx</p>';
-}
-
-function generatePlan() {
-  const date = document.getElementById('examDate').value;
-  if (!date) return alert('Please select your exam date.');
-  document.getElementById('step2').classList.add('done');
-  document.getElementById('step3').classList.add('done');
-  document.getElementById('step3').classList.add('active');
-
-  const days = Math.max(1, Math.ceil((new Date(date) - new Date()) / (1000*60*60*24)));
-  const plan = document.getElementById('examPlan');
-  const content = document.getElementById('examPlanContent');
-  plan.classList.add('visible');
-
-  content.innerHTML = `
-    <div class="dash-card" style="margin-bottom:16px">
-      <p><strong>📅 ${days} days</strong> until your exam</p>
-      <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
-    </div>
-    <div class="dash-card">
-      <h3> Weekly Breakdown</h3>
-      ${Array.from({length:Math.min(4,Math.ceil(days/7))},(_,w)=>`
-        <div class="plan-item">
-          <div class="plan-check">${w+1}</div>
-          <div class="plan-text"><strong>Week ${w+1}</strong><small>Core concepts review · Flashcards · Practice quiz</small></div>
-        </div>
-      `).join('')}
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-        <strong>📋 Daily tasks:</strong>
-        <ul style="margin:8px 0 0 20px;font-size:14px;color:var(--text2)">
-          <li>Review flashcards (spaced repetition)</li>
-          <li>Complete 10 practice problems</li>
-          <li>Weekly full-length practice exam</li>
-        </ul>
-      </div>
-    </div>
-  `;
-  plan.scrollIntoView({behavior:'smooth'});
-}
 
 // ── Init ──
 renderSubjects();
