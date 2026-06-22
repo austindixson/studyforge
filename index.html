@@ -41,7 +41,18 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
 .cam-btn:hover,.cam-btn:active{border-color:var(--gold);background:var(--gold-light)}
 .send-btn{width:42px;height:42px;border-radius:50%;border:none;background:var(--gold);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .send-btn:hover{background:var(--gold-dark)}
-#camInput{display:none}
+#camInput,#fileInput{display:none}
+/* Crop overlay */
+.crop-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.92);display:none;flex-direction:column}
+.crop-overlay.open{display:flex}
+.crop-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;color:#fff}
+.crop-toolbar button{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 16px;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.crop-toolbar button.primary{background:var(--gold);border-color:var(--gold)}
+.crop-canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.crop-canvas-wrap canvas{max-width:100%;max-height:100%;object-fit:contain}
+.crop-hint{position:absolute;bottom:16px;color:rgba(255,255,255,.5);font-size:13px;text-align:center;width:100%;pointer-events:none}
+.attach-btn{width:42px;height:42px;border-radius:50%;border:2px solid var(--border);background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.attach-btn:hover,.attach-btn:active{border-color:var(--gold);background:var(--gold-light)}
 .action-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
 .action-btn{padding:8px 14px;border-radius:99px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--font);white-space:nowrap}
 .action-btn:hover,.action-btn:active{background:var(--gold-light);border-color:var(--gold)}
@@ -114,8 +125,10 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
     <div class="chat-msg ai">👋 <strong>Hi! I'm your AI tutor.</strong><br><br>📷 <strong>Snap a photo</strong> of any homework problem<br>💬 <strong>Type a problem</strong> — I'll solve it step by step<br>🎯 <strong>Pick a mode</strong> — Solver, Socratic, or Explain<br><br><span style="font-size:12px;opacity:.6">Try: "Solve 2x²+7x-15=0" or "A train leaves at 8am..."</span></div>
   </div>
   <div class="input-bar">
-    <input type="file" id="camInput" accept="image/*" capture="environment" onchange="capturePhoto(this)">
-    <button class="cam-btn" onclick="document.getElementById('camInput').click()">📷</button>
+    <input type="file" id="camInput" accept="image/*" capture="environment" onchange="pickImage(this)">
+    <input type="file" id="fileInput" accept="image/*" onchange="pickImage(this)">
+    <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Upload from gallery">📎</button>
+    <button class="cam-btn" onclick="document.getElementById('camInput').click()" title="Take photo">📷</button>
     <input type="text" id="msgInput" placeholder="Type a math problem..." onkeydown="if(event.key==='Enter')send()">
     <button class="send-btn" onclick="send()">➤</button>
   </div>
@@ -132,6 +145,19 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
   <div class="exp-topbar"><h2>📖 <span id="expTitle">Full Solution</span></h2><div style="display:flex;gap:8px;align-items:center"><span class="exp-badge" id="expBadge">Nano Banana 2</span><button class="icon-btn" onclick="closeExplainer()">✕</button></div></div>
   <div class="exp-body" id="expBody"></div>
   <div class="exp-nav"><button onclick="expSlide(-1)" id="expPrev">← Prev</button><div class="exp-dots" id="expDots"></div><button onclick="expSlide(1)" class="primary" id="expNext">Next →</button></div>
+</div>
+
+<!-- Crop overlay -->
+<div class="crop-overlay" id="cropOverlay">
+  <div class="crop-toolbar">
+    <button onclick="cancelCrop()">Cancel</button>
+    <span style="font-weight:600">✂️ Crop image</span>
+    <button class="primary" onclick="applyCrop()">Crop & Send →</button>
+  </div>
+  <div class="crop-canvas-wrap">
+    <canvas id="cropCanvas"></canvas>
+    <div class="crop-hint" id="cropHint">Drag to select the problem area</div>
+  </div>
 </div>
 </div>
 
@@ -284,11 +310,59 @@ function renderActions(actions){
   return`<div class="action-btns">${actions.map((a,i)=>`<button class="action-btn${i===0&&!a.cls?' primary':a.cls?' '+a.cls:''}" onclick="(${a.c.toString()})()">${a.t}</button>`).join('')}</div>`;
 }
 
-function capturePhoto(input){
+// ── Image pick + crop ──
+let cropImage=null,cropDataUrl=null,cropRect=null;
+function pickImage(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=()=>{addMsg('user',`<img src="${reader.result}"><div class="chat-img-label"><span class="badge badge-cam">📷 Photo</span></div>`);analyzePhoto()};
+  reader.onload=()=>{
+    cropDataUrl=reader.result;cropRect=null;
+    const img=new Image();img.onload=()=>{cropImage=img;startCrop()};img.src=cropDataUrl;
+  };
   reader.readAsDataURL(file);input.value='';
+}
+function startCrop(){
+  const ov=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');
+  ov.classList.add('open');document.getElementById('cropHint').style.display='';
+  // Fit image to viewport
+  const maxW=window.innerWidth-32,maxH=window.innerHeight-120;
+  let w=cropImage.width,h=cropImage.height;
+  const scale=Math.min(maxW/w,maxH/h,1);w*=scale;h*=scale;
+  cv.width=w;cv.height=h;
+  const ctx=cv.getContext('2d');ctx.drawImage(cropImage,0,0,w,h);
+  // Drag to crop
+  let sx,sy,drawing=false;
+  cv.onpointerdown=e=>{const r=cv.getBoundingClientRect();sx=e.clientX-r.left;sy=e.clientY-r.top;drawing=true;cropRect=null;document.getElementById('cropHint').style.display='none'};
+  cv.onpointermove=e=>{if(!drawing)return;const r=cv.getBoundingClientRect();let x=e.clientX-r.left,y=e.clientY-r.top;
+    x=Math.max(0,Math.min(w,x));y=Math.max(0,Math.min(h,y));
+    cropRect={x:Math.min(sx,x),y:Math.min(sy,y),w:Math.abs(x-sx),h:Math.abs(y-sy)};
+    ctx.drawImage(cropImage,0,0,w,h);
+    ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(0,0,w,h);
+    ctx.clearRect(cropRect.x,cropRect.y,cropRect.w,cropRect.h);
+    ctx.strokeStyle='#F5A623';ctx.lineWidth=2;ctx.strokeRect(cropRect.x,cropRect.y,cropRect.w,cropRect.h);
+  };
+  cv.onpointerup=()=>{drawing=false;if(!cropRect||cropRect.w<20||cropRect.h<20){cropRect=null;ctx.drawImage(cropImage,0,0,w,h);document.getElementById('cropHint').style.display=''}};
+  document.getElementById('cropHint').textContent='Drag to select the problem area';
+}
+function cancelCrop(){document.getElementById('cropOverlay').classList.remove('open');cropImage=null;cropDataUrl=null;cropRect=null}
+function applyCrop(){
+  const ov=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');
+  ov.classList.remove('open');
+  // Create cropped image
+  const outCv=document.createElement('canvas');
+  if(cropRect&&cropRect.w>=20){
+    const scaleX=cropImage.width/cv.width,scaleY=cropImage.height/cv.height;
+    outCv.width=Math.round(cropRect.w*scaleX);outCv.height=Math.round(cropRect.h*scaleY);
+    const ctx=outCv.getContext('2d');
+    ctx.drawImage(cropImage,cropRect.x*scaleX,cropRect.y*scaleY,outCv.width,outCv.height,0,0,outCv.width,outCv.height);
+  }else{
+    outCv.width=cropImage.width;outCv.height=cropImage.height;
+    outCv.getContext('2d').drawImage(cropImage,0,0);
+  }
+  const cropped=outCv.toDataURL('image/jpeg',.85);
+  addMsg('user',`<img src="${cropped}"><div class="chat-img-label"><span class="badge badge-cam">📷 ${cropRect?'Cropped':'Photo'}</span></div>`);
+  analyzePhoto();
+  cropImage=null;cropDataUrl=null;cropRect=null;
 }
 
 function analyzePhoto(){
