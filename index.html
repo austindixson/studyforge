@@ -130,9 +130,17 @@ nav { position:sticky; top:0; z-index:100; background:rgba(255,255,255,.92); bac
 .chat-msg.user { align-self:flex-end; background:var(--blue); color:#fff; border-bottom-right-radius:6px; }
 .chat-msg.ai { align-self:flex-start; background:#fff; border:1px solid var(--border); border-bottom-left-radius:6px; }
 .chat-msg.ai pre { background:var(--bg3); padding:12px; border-radius:8px; overflow-x:auto; font-size:13px; margin:8px 0; }
-.tutor-input { display:flex; gap:8px; padding:12px 0; }
+.tutor-input { display:flex; gap:8px; padding:12px 0; align-items:center; }
 .tutor-input input { flex:1; padding:14px 18px; border:2px solid var(--border); border-radius:99px; font-size:15px; font-family:var(--font); outline:none; transition:border .2s; }
 .tutor-input input:focus { border-color:var(--gold); }
+.cam-btn { width:44px; height:44px; border-radius:50%; border:2px solid var(--border); background:var(--bg); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; flex-shrink:0; }
+.cam-btn:hover { border-color:var(--gold); background:var(--gold-light); }
+.cam-btn.recording { background:#EF4444; border-color:#EF4444; animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.chat-img { max-width:200px; border-radius:12px; margin-top:8px; border:1px solid var(--border); }
+.chat-msg.user .chat-img { border-color:rgba(255,255,255,.2); }
+.analysis-badge { display:inline-block; padding:3px 10px; border-radius:99px; background:var(--gold-light); color:var(--gold-dark); font-size:11px; font-weight:600; margin-bottom:6px; }
+#camInput { display:none; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
 /* ── Exam Prep ── */
@@ -333,7 +341,9 @@ footer { border-top:1px solid var(--border); padding:40px 24px; text-align:cente
       <div class="chat-msg ai">👋 Hi! I'm your AI tutor. Ask me anything — snap a problem, ask for an explanation, or upload your homework. I'll walk you through it step by step.</div>
     </div>
     <div class="tutor-input">
-      <input type="text" id="tutorInput" placeholder="Ask anything — e.g. 'Solve 3x²+5x-2=0' or 'Explain Newton's laws'..." onkeydown="if(event.key==='Enter')sendTutor()">
+      <input type="file" id="camInput" accept="image/*" capture="environment" onchange="handleCameraCapture(this)">
+      <button class="cam-btn" onclick="document.getElementById('camInput').click()" title="Snap a photo">📷</button>
+      <input type="text" id="tutorInput" placeholder="Ask anything — e.g. 'Solve 3x²+5x-2=0' or snap a photo 📷..." onkeydown="if(event.key==='Enter')sendTutor()">
       <button class="btn btn-gold" onclick="sendTutor()">Send</button>
     </div>
   </div>
@@ -427,10 +437,86 @@ function renderDashboard() {
 
 // ── AI Tutor ──
 let tutorMode = 'solve';
+let pendingImage = null; // base64 data URL of captured image
+
 function setMode(mode) {
   tutorMode = mode;
   document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
   document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+}
+
+function handleCameraCapture(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingImage = reader.result;
+    const chat = document.getElementById('tutorChat');
+    chat.innerHTML += `<div class="chat-msg user">
+      <div class="analysis-badge">📷 Photo captured</div>
+      <img src="${pendingImage}" class="chat-img" alt="Captured problem">
+      <div style="margin-top:6px;font-size:12px;opacity:.7">Analyzing with Nano Banana...</div>
+    </div>`;
+    chat.scrollTop = chat.scrollHeight;
+    analyzeImage(pendingImage);
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function analyzeImage(dataUrl) {
+  const chat = document.getElementById('tutorChat');
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'chat-msg ai';
+  aiDiv.innerHTML = '<span class="analysis-badge">🔍 Nano Banana Vision</span><br>Scanning image...';
+  chat.appendChild(aiDiv);
+  chat.scrollTop = chat.scrollHeight;
+
+  // Simulate Nano Banana analysis (in production: POST to Higgsfield API)
+  setTimeout(() => {
+    const analyses = [
+      `<span class="analysis-badge">🔍 Nano Banana Vision — Analysis</span><br><br>
+<strong>Detected:</strong> Handwritten math problem<br><br>
+<strong>Problem identified:</strong> Quadratic equation — appears to be <code>2x²+7x-15=0</code><br><br>
+<strong>Step-by-step solution:</strong><br><br>
+<strong>Step 1:</strong> Identify coefficients: <code>a=2, b=7, c=-15</code><br><br>
+<strong>Step 2:</strong> Quadratic formula: <code>x = (-b ± √(b²-4ac)) / 2a</code><br><br>
+<strong>Step 3:</strong> Discriminant: <code>49 - 4(2)(-15) = 49+120 = 169</code><br><br>
+<strong>Step 4:</strong> <code>√169 = 13</code><br><br>
+<strong>Step 5:</strong> <code>x = (-7 ± 13) / 4</code><br><br>
+<strong>Step 6:</strong> <code>x₁ = 6/4 = 3/2</code>, <code>x₂ = -20/4 = -5</code><br><br>
+✅ <strong>Answer:</strong> <code>x = 1.5</code> or <code>x = -5</code><br><br>
+<em>Powered by Nano Banana 2 — Higgsfield AI</em>`,
+
+      `<span class="analysis-badge">🔍 Nano Banana Vision — Analysis</span><br><br>
+<strong>Detected:</strong> Physics diagram — forces on an inclined plane<br><br>
+<strong>Key observations:</strong><br>
+• Object on a ramp at angle θ<br>
+• Gravity (<code>mg</code>) pulling straight down<br>
+• Normal force (<code>N</code>) perpendicular to surface<br>
+• Friction (<code>f</code>) opposing motion<br><br>
+<strong>Decomposition:</strong><br>
+• Parallel component: <code>mg·sin(θ)</code> pulls object down ramp<br>
+• Perpendicular component: <code>mg·cos(θ)</code> balanced by normal force<br><br>
+<strong>Net force:</strong> <code>F = mg·sin(θ) - f</code><br>
+<strong>Acceleration:</strong> <code>a = g·sin(θ) - f/m</code><br><br>
+Would you like me to work through a specific angle and mass?<br><br>
+<em>Powered by Nano Banana 2 — Higgsfield AI</em>`,
+
+      `<span class="analysis-badge">🔍 Nano Banana Vision — Analysis</span><br><br>
+<strong>Detected:</strong> Chemistry molecular structure<br><br>
+<strong>Molecule:</strong> Appears to be glucose (<code>C₆H₁₂O₆</code>)<br><br>
+<strong>Structure type:</strong> Ring form (pyranose) — 6-membered ring with oxygen<br><br>
+<strong>Key features:</strong><br>
+• 5 hydroxyl (<code>-OH</code>) groups<br>
+• 1 aldehyde group in open-chain form<br>
+• Chiral centers at carbons 2, 3, 4, and 5<br><br>
+<strong>Biological role:</strong> Primary energy source for cells. Produced by photosynthesis, metabolized via glycolysis and the Krebs cycle.<br><br>
+<em>Powered by Nano Banana 2 — Higgsfield AI</em>`
+    ];
+    aiDiv.innerHTML = analyses[Math.floor(Math.random() * analyses.length)];
+    chat.scrollTop = chat.scrollHeight;
+  }, 1500);
 }
 
 const TUTOR_RESPONSES = {
