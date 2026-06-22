@@ -54,7 +54,12 @@ body { font-family:var(--font); color:var(--text); background:var(--bg); height:
 .send-btn:hover { background:var(--gold-dark); }
 #camInput { display:none; }
 
-/* ── Welcome screen (first-visit overlay) ── */
+/* ── Action buttons ── */
+.action-btns { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+.action-btn { padding:8px 14px; border-radius:99px; border:1px solid var(--border); background:var(--bg); font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; font-family:var(--font); white-space:nowrap; }
+.action-btn:hover,.action-btn:active { background:var(--gold-light); border-color:var(--gold); }
+.action-btn.primary { background:var(--gold); color:#fff; border-color:var(--gold); }
+.action-btn.primary:hover { background:var(--gold-dark); }
 .welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; text-align:center; }
 .welcome-icon { font-size:56px; margin-bottom:16px; }
 .welcome h2 { font-size:22px; margin-bottom:8px; }
@@ -249,34 +254,86 @@ function send() {
   const aiDiv = aiDivs[aiDivs.length-1];
 
   setTimeout(() => {
-    let resp;
+    let resp, actions = [];
+    const lower = text.toLowerCase();
     if (tutorMode === 'socratic') {
       resp = `🤔 <strong>Let me ask you instead:</strong> What do you already know about this topic?<br><br>Take your time — understanding where you're starting from helps me guide you better.`;
+      actions = [{t:'Give me a hint',c:()=>sendPretyped('Give me a hint about this topic')},{t:'Start from basics',c:()=>sendPretyped('Explain this from the very basics')}];
     } else if (tutorMode === 'explain') {
-      resp = `📚 <strong>Concept Overview</strong><br><br><strong>What it is:</strong> A foundational idea that connects to multiple topics.<br><br><strong>Why it matters:</strong> Mastering this opens up [related concepts].<br><br><strong>Key principles:</strong><br>1. Core mechanism<br>2. Real-world application<br>3. Common edge cases<br><br><strong>Watch out for:</strong> Students often [common mistake]. Here's the fix...<br><br>Want me to go deeper on any part?`;
+      resp = `📚 <strong>Concept Overview</strong><br><br><strong>What it is:</strong> A foundational idea that connects to multiple topics.<br><br><strong>Why it matters:</strong> Mastering this opens up related concepts.<br><br><strong>Key principles:</strong><br>1. Core mechanism<br>2. Real-world application<br>3. Common edge cases<br><br><strong>Watch out for:</strong> Students often miss the edge cases — here's the fix...`;
+      actions = [{t:'Go deeper',c:()=>sendPretyped('Go deeper into this concept')},{t:'Show examples',c:()=>sendPretyped('Show me real-world examples')},{t:'Practice quiz',c:()=>sendPretyped('Give me a practice quiz on this')}];
     } else {
-      const lower = text.toLowerCase();
       if (lower.includes('3x²')||lower.includes('3x^2')||lower.includes('quadratic')) {
-        resp = `<strong>Quadratic:</strong> <code>3x²+5x-2=0</code><br><br>
-<strong>Step 1:</strong> <code>a=3, b=5, c=-2</code><br>
-<strong>Step 2:</strong> Discriminant: <code>25+24=49</code><br>
-<strong>Step 3:</strong> <code>√49=7</code><br>
-<strong>Step 4:</strong> <code>x=(-5±7)/6</code><br>
-<strong>Step 5:</strong> <code>x=⅓, x=-2</code><br><br>
+        resp = `<strong>🧮 Core concept: Quadratic Equations</strong><br><br>
+<strong>Problem:</strong> <code>3x²+5x-2=0</code><br><br>
+<strong>Step 1:</strong> Identify coefficients: <code>a=3, b=5, c=-2</code><br>
+<strong>Step 2:</strong> Discriminant: <code>b²-4ac = 25+24 = 49</code><br>
+<strong>Step 3:</strong> Square root: <code>√49 = 7</code><br>
+<strong>Step 4:</strong> Apply formula: <code>x = (-5 ± 7) / 6</code><br>
+<strong>Step 5:</strong> <code>x₁ = 2/6 = 1/3</code>, <code>x₂ = -12/6 = -2</code><br><br>
 ✅ <strong>Answer: x = 1/3 or x = -2</strong>`;
+        actions = [{t:'Explain step 2',c:()=>sendPretyped('Explain the discriminant step in more detail')},{t:'Similar problem',c:()=>sendPretyped('Give me another quadratic to practice')},{t:'Different method',c:()=>sendPretyped('Show me factoring method instead')}];
+      } else if (lower.includes('word problem')||lower.includes('story')||lower.includes('train')||lower.includes('alice')||lower.includes('bob')||lower.includes('john')) {
+        resp = identifyWordProblem(text);
+        actions = [{t:'Show your work',c:()=>sendPretyped('Show me every step in detail')},{t:'Check my answer',c:()=>sendPretyped('Let me try to solve it and you check')},{t:'Similar problem',c:()=>sendPretyped('Give me another word problem like this')}];
       } else {
         resp = `<strong>Here's the breakdown:</strong><br><br>
 <strong>Step 1:</strong> Identify what we're solving for.<br>
-<strong>Step 2:</strong> Apply the relevant formula.<br>
-<strong>Step 3:</strong> Work through the calculation.<br>
-<strong>Step 4:</strong> Verify the answer.<br><br>
-💡 <em>Tip: I can generate practice problems — just ask!</em><br><br>
-What part would you like me to explain more?`;
+<strong>Step 2:</strong> Apply the relevant formula or concept.<br>
+<strong>Step 3:</strong> Work through the calculation systematically.<br>
+<strong>Step 4:</strong> Double-check the answer.<br><br>
+💡 <em>Tip: I can generate practice problems — just ask!</em>`;
+        actions = [{t:'Practice problems',c:()=>sendPretyped('Give me practice problems on this')},{t:'Explain differently',c:()=>sendPretyped('Explain this a different way')},{t:'Flashcards',c:()=>sendPretyped('Turn this into flashcards')}];
       }
     }
-    aiDiv.innerHTML = resp;
+    aiDiv.innerHTML = resp + renderActions(actions);
     document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
   }, 600);
+}
+
+function sendPretyped(msg) {
+  addMsg('user', msg);
+  const aiHtml = '<span class="badge badge-ai">Thinking...</span>';
+  addMsg('ai', aiHtml);
+  const aiDivs = document.querySelectorAll('#chat .chat-msg.ai');
+  const aiDiv = aiDivs[aiDivs.length-1];
+  setTimeout(() => {
+    let resp = `<strong>Great question!</strong><br><br>Let me break this down further...<br><br>`;
+    if (msg.toLowerCase().includes('practice')||msg.toLowerCase().includes('similar')) {
+      resp += `<strong>Practice Problem:</strong><br>A train leaves Station A at 8:00 AM traveling at 60 mph. Another train leaves Station B — 300 miles away — at 9:00 AM traveling at 75 mph toward Station A. When do they meet?<br><br>`;
+      resp += `<strong>Solution approach:</strong><br>1. Let t = hours after 8:00 AM<br>2. Train A: distance = 60t<br>3. Train B: distance = 75(t−1)<br>4. 60t + 75(t−1) = 300<br>5. Solve for t<br><br>Try it and I'll check your work!`;
+    } else if (msg.toLowerCase().includes('different')||msg.toLowerCase().includes('method')) {
+      resp += `<strong>Alternative approach:</strong><br><br>Instead of the formula method, let's use <em>factoring</em> or <em>completing the square</em>. Which would you prefer?`;
+    } else {
+      resp += `Here's the deeper explanation you asked for — with extra detail on the reasoning behind each step. Want me to go even further?`;
+    }
+    aiDiv.innerHTML = resp + renderActions([{t:'Keep going',c:()=>sendPretyped('Keep explaining')},{t:'Try a problem',c:()=>sendPretyped('Give me a practice problem')}]);
+    document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+  }, 500);
+}
+
+function identifyWordProblem(text) {
+  return `<span class="badge badge-ai">📝 Word Problem — Core Concept</span><br><br>
+<strong>🔑 Core concept: Linear Motion / Rate-Time-Distance</strong><br><br>
+<strong>What you're being asked:</strong> Find when two moving objects meet<br><br>
+<strong>Key information extracted:</strong><br>
+• Two objects moving toward each other<br>
+• Different start times<br>
+• Known speeds and distance<br><br>
+<strong>Strategy:</strong><br>
+1. Define a variable (let t = time)<br>
+2. Write distance = rate × time for each<br>
+3. Set up equation: total distance = sum of individual distances<br>
+4. Solve for t<br><br>
+<strong>Formula:</strong> <code>d₁ + d₂ = D</code> → <code>r₁t₁ + r₂t₂ = D</code><br><br>
+<em>Tap "Show your work" below to see the full solution.</em>`;
+}
+
+function renderActions(actions) {
+  if (!actions.length) return '';
+  return `<div class="action-btns">${actions.map((a,i) => 
+    `<button class="action-btn${i===0?' primary':''}" onclick="(${a.c.toString()})()">${a.t}</button>`
+  ).join('')}</div>`;
 }
 
 // ── Camera + Nano Banana ──
@@ -297,55 +354,87 @@ function analyzeWithNanoBanana(dataUrl) {
   const chat = document.getElementById('chat');
   const aiDiv = document.createElement('div');
   aiDiv.className = 'chat-msg ai';
-  aiDiv.innerHTML = '<span class="badge badge-ai">🔍 Nano Banana 2</span> Scanning...';
+  aiDiv.innerHTML = '<span class="badge badge-ai">🔍 Nano Banana 2</span> Scanning image...';
   chat.appendChild(aiDiv);
   chat.scrollTop = chat.scrollHeight;
 
   setTimeout(() => {
-    const analyses = [
-      `<span class="badge badge-ai">🔍 Nano Banana 2 — Math</span><br><br>
-<strong>Detected:</strong> Quadratic equation<br>
-<strong>Problem:</strong> <code>2x²+7x-15=0</code><br><br>
-<strong>Solution:</strong><br>
-• Coefficients: <code>a=2, b=7, c=-15</code><br>
-• Discriminant: <code>49-4(2)(-15)=169</code><br>
-• <code>√169=13</code><br>
-• <code>x=(-7±13)/4</code><br>
-• <code>x₁=1.5, x₂=-5</code><br><br>
-✅ <strong>Answer: x = 3/2 or x = -5</strong><br><br>
-<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`,
+    // Simulate Nano Banana detecting problem type from image
+    // In production: POST image to Higgsfield Nano Banana 2 API → parse response
+    const pick = Math.floor(Math.random() * 5);
+    let html, actions;
 
-      `<span class="badge badge-ai">🔍 Nano Banana 2 — Physics</span><br><br>
-<strong>Detected:</strong> Forces on an inclined plane<br><br>
-<strong>Breakdown:</strong><br>
-• Gravity: <code>mg</code> straight down<br>
-• Parallel: <code>mg·sin(θ)</code> down ramp<br>
-• Normal: <code>N = mg·cos(θ)</code><br>
+    if (pick === 0) {
+      // Word problem detected
+      html = `<span class="badge badge-ai">🔍 Nano Banana 2 — Word Problem</span><br><br>
+<strong>📝 Type detected:</strong> Word problem — handwritten<br><br>
+<strong>🔑 Core concept: Rate × Time = Distance</strong><br><br>
+<strong>📋 Key information extracted from image:</strong><br>
+• Two vehicles departing at different times<br>
+• Known speeds: probably 60 mph and 75 mph<br>
+• Known separation: ~300 miles<br>
+• Question: "When do they meet?"<br><br>
+<strong>🧠 Strategy:</strong><br>
+1. Let <code>t</code> = hours after first departure<br>
+2. Vehicle A: <code>distance = 60t</code><br>
+3. Vehicle B: <code>distance = 75(t − 1)</code><br>
+4. <code>60t + 75(t − 1) = 300</code><br>
+5. <code>135t − 75 = 300</code><br>
+6. <code>135t = 375</code><br>
+7. <code>t = 2.78 hours ≈ 2h 47min</code><br><br>
+✅ <strong>They meet at approximately 10:47 AM</strong><br><br>
+<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
+      actions = [{t:'Show every step',c:()=>sendPretyped('Show me every single step in detail')},{t:'Check my work',c:()=>sendPretyped('Let me solve it myself and you check')},{t:'Another like this',c:()=>sendPretyped('Give me another word problem like this')}];
+    } else if (pick === 1) {
+      html = `<span class="badge badge-ai">🔍 Nano Banana 2 — Math</span><br><br>
+<strong>🧮 Core concept: Quadratic Equations</strong><br><br>
+<strong>Problem detected:</strong> <code>2x² + 7x − 15 = 0</code><br><br>
+<strong>Step-by-step solution:</strong><br>
+• <code>a=2, b=7, c=−15</code><br>
+• Discriminant: <code>49 − 4(2)(−15) = 49+120 = 169</code><br>
+• <code>√169 = 13</code><br>
+• <code>x = (−7 ± 13) / 4</code><br>
+• <code>x₁ = 6/4 = 3/2</code><br>
+• <code>x₂ = −20/4 = −5</code><br><br>
+✅ <strong>Answer: x = 1.5 or x = −5</strong><br><br>
+<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
+      actions = [{t:'Try factoring',c:()=>sendPretyped('Show me factoring method instead')},{t:'Practice',c:()=>sendPretyped('Give me another quadratic')},{t:'Explain formula',c:()=>sendPretyped('Where does the quadratic formula come from')}];
+    } else if (pick === 2) {
+      html = `<span class="badge badge-ai">🔍 Nano Banana 2 — Physics</span><br><br>
+<strong>⚡ Core concept: Newton's Second Law — Inclined Plane</strong><br><br>
+<strong>Diagram detected:</strong> Block on a ramp at angle θ<br><br>
+<strong>Forces at play:</strong><br>
+• Gravity: <code>mg</code> ↓<br>
+• Normal: <code>N = mg·cos(θ)</code> ⊥ surface<br>
+• Parallel: <code>mg·sin(θ)</code> ∥ surface<br>
 • Friction: <code>f = μN</code> opposing motion<br><br>
-<strong>Net force:</strong> <code>F = mg·sin(θ) - μmg·cos(θ)</code><br>
-<strong>Acceleration:</strong> <code>a = g(sin θ - μ·cos θ)</code><br><br>
-<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`,
-
-      `<span class="badge badge-ai">🔍 Nano Banana 2 — Chemistry</span><br><br>
-<strong>Detected:</strong> Molecular structure — Glucose<br>
-<strong>Formula:</strong> <code>C₆H₁₂O₆</code><br><br>
-<strong>Structure:</strong> 6-membered pyranose ring<br>
-• 5 hydroxyl (<code>-OH</code>) groups<br>
+<strong>Net force down ramp:</strong> <code>F = mg·sin(θ) − μmg·cos(θ)</code><br>
+<strong>Acceleration:</strong> <code>a = g(sin θ − μ·cos θ)</code><br><br>
+<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
+      actions = [{t:'Plug in numbers',c:()=>sendPretyped('Plug in θ=30° and μ=0.2 and solve')},{t:'No friction case',c:()=>sendPretyped('What if there is no friction')},{t:'Free body diagram',c:()=>sendPretyped('Draw me a free body diagram')}];
+    } else if (pick === 3) {
+      html = `<span class="badge badge-ai">🔍 Nano Banana 2 — Chemistry</span><br><br>
+<strong>🧪 Core concept: Molecular Structure — Glucose</strong><br><br>
+<strong>Molecule identified:</strong> <code>C₆H₁₂O₆</code> (Glucose)<br><br>
+<strong>Structure:</strong> 6-membered pyranose ring with oxygen heteroatom<br>
+• 5 hydroxyl (−OH) groups at C1-C4, C6<br>
 • 4 chiral centers (C2, C3, C4, C5)<br>
-• Primary energy source for cells<br><br>
-<strong>Pathways:</strong> Glycolysis → Krebs cycle → ETC<br><br>
-<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`,
-
-      `<span class="badge badge-ai">🔍 Nano Banana 2 — General</span><br><br>
-<strong>I can see:</strong> Handwritten notes / textbook page<br><br>
-<strong>Key topics identified:</strong><br>
-• Main concept clearly stated<br>
-• Supporting examples visible<br>
-• Formula/equation present<br><br>
-Let me know which specific problem or concept you want me to work through!<br><br>
-<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`
-    ];
-    aiDiv.innerHTML = analyses[Math.floor(Math.random() * analyses.length)];
+• Anomeric carbon at C1<br><br>
+<strong>Biological role:</strong> Primary energy source — glycolysis → Krebs cycle → ETC<br><br>
+<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
+      actions = [{t:'Glycolysis detail',c:()=>sendPretyped('Walk me through glycolysis step by step')},{t:'vs Fructose',c:()=>sendPretyped('How is glucose different from fructose')},{t:'Practice quiz',c:()=>sendPretyped('Quiz me on carbohydrate chemistry')}];
+    } else {
+      html = `<span class="badge badge-ai">🔍 Nano Banana 2 — General</span><br><br>
+<strong>📄 Content detected:</strong> Handwritten study notes / textbook page<br><br>
+<strong>🔑 Key topics visible:</strong><br>
+• Main concept is readable<br>
+• Supporting details / examples present<br>
+• Formula or equation detected<br><br>
+I can help with any specific problem on this page — just tell me which one, or ask me to explain the core topic.<br><br>
+<em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
+      actions = [{t:'Explain the topic',c:()=>sendPretyped('Explain the main topic on this page')},{t:'Solve a problem',c:()=>sendPretyped('Solve the first problem on this page')},{t:'Make flashcards',c:()=>sendPretyped('Turn these notes into flashcards')}];
+    }
+    aiDiv.innerHTML = html + renderActions(actions);
     chat.scrollTop = chat.scrollHeight;
   }, 1200);
 }
