@@ -122,7 +122,8 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
 <body>
 <div class="app" id="app">
 <div class="page active" id="page-chat">
-  <div class="topbar"><h1>Study<span>Forge</span></h1><div class="topbar-actions"><button class="icon-btn" onclick="showAbout()">ℹ️</button><button class="icon-btn" onclick="showWelcome()">📚</button></div></div>
+  <div class="topbar" style="position:relative;z-index:10"><h1>Study<span>Forge</span></h1><div class="topbar-actions"><button class="icon-btn" onclick="showAbout()">ℹ️</button><button class="icon-btn" onclick="showWelcome()">📚</button></div></div>
+  <div id="statusBar" style="display:none;background:var(--gold-light);color:var(--gold-dark);padding:4px 16px;font-size:12px;font-weight:500;text-align:center"></div>
   <div class="mode-bar">
     <button class="mode-chip active" data-mode="solve" onclick="setMode('solve')">🧮 Solver</button>
     <button class="mode-chip" data-mode="socratic" onclick="setMode('socratic')">💭 Socratic</button>
@@ -334,8 +335,11 @@ let lastImageDataUrl=null, lastImageOrig=null; // stored for answer card generat
 let cameraStream=null,cameraFacing='environment'; // back camera default
 const HANDLE=10;
 
+function showStatus(msg){const el=document.getElementById('statusBar');if(el){el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none'},3000)}}
+
 // ── Camera (getUserMedia — reliable on mobile) ──
 async function openCamera(){
+  showStatus('Opening camera...');
   try{
     cameraFacing='environment';
     cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},audio:false});
@@ -368,6 +372,7 @@ function closeCamera(){
   document.getElementById('cameraOverlay').classList.remove('open');
 }
 function captureFrame(){
+  showStatus('Capturing...');
   try{
     const v=document.getElementById('cameraVideo');
     if(!v.videoWidth||v.videoWidth===0){alert('Camera not ready. Try again.');return}
@@ -386,6 +391,7 @@ function captureFrame(){
 }
 
 function pickImage(input){
+  showStatus('Loading image...');
   try{
     const file=input.files[0];if(!file)return;
     if(file.size>50*1024*1024){alert('Image too large. Max 50MB.');return}
@@ -403,6 +409,7 @@ function pickImage(input){
   }catch(e){alert('Upload error: '+e.message);}
 }
 function initCrop(){
+  showStatus('Crop ready');
   const ov=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');
   // Fit image to viewport
   const maxW=window.innerWidth-32,maxH=window.innerHeight-180;
