@@ -41,7 +41,8 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
 .cam-btn:hover,.cam-btn:active{border-color:var(--gold);background:var(--gold-light)}
 .send-btn{width:42px;height:42px;border-radius:50%;border:none;background:var(--gold);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .send-btn:hover{background:var(--gold-dark)}
-#camInput,#fileInput{display:none}
+#fileInput{display:none}
+/* Crop overlay */
 .crop-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.92);display:none;flex-direction:column}
 .crop-overlay.open{display:flex}
 .crop-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;color:#fff}
@@ -50,6 +51,13 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
 .crop-canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
 .crop-canvas-wrap canvas{max-width:100%;max-height:100%;object-fit:contain}
 .crop-hint{position:absolute;bottom:16px;color:rgba(255,255,255,.5);font-size:13px;text-align:center;width:100%;pointer-events:none}
+.camera-overlay{position:fixed;inset:0;z-index:700;background:#000;display:none;flex-direction:column}
+.camera-overlay.open{display:flex}
+.camera-overlay video{flex:1;width:100%;object-fit:cover}
+.camera-toolbar{display:flex;align-items:center;justify-content:space-between;padding:16px;gap:12px}
+.camera-shutter{width:64px;height:64px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;margin:0 auto;transition:all .15s}
+.camera-shutter:active{background:rgba(255,255,255,.6);transform:scale(.9)}
+.camera-swap{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.4);background:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .attach-btn{width:42px;height:42px;border-radius:50%;border:2px solid var(--border);background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
 .attach-btn:hover,.attach-btn:active{border-color:var(--gold);background:var(--gold-light)}
 .action-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
@@ -79,6 +87,7 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
 .about .feature-mini p{font-size:11px;margin-top:4px}
 .about .testimonial{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px}
 .about .stars{color:var(--gold)}
+/* Explainer Overlay */
 .explainer-overlay{position:fixed;inset:0;z-index:500;background:var(--bg);display:none;flex-direction:column;animation:slideUp .3s}
 .explainer-overlay.open{display:flex}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
@@ -123,10 +132,9 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
     <div class="chat-msg ai">👋 <strong>Hi! I'm your AI tutor.</strong><br><br>📷 <strong>Snap a photo</strong> of any homework problem<br>💬 <strong>Type a problem</strong> — I'll solve it step by step<br>🎯 <strong>Pick a mode</strong> — Solver, Socratic, or Explain<br><br><span style="font-size:12px;opacity:.6">Try: "Solve 2x²+7x-15=0" or "A train leaves at 8am..."</span></div>
   </div>
   <div class="input-bar">
-    <input type="file" id="camInput" accept="image/*" capture="environment" onchange="pickImage(this)">
     <input type="file" id="fileInput" accept="image/*" onchange="pickImage(this)">
     <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Upload from gallery">📎</button>
-    <button class="cam-btn" onclick="document.getElementById('camInput').click()" title="Take photo">📷</button>
+    <button class="cam-btn" onclick="openCamera()" title="Take photo">📷</button>
     <input type="text" id="msgInput" placeholder="Type a math problem..." onkeydown="if(event.key==='Enter')send()">
     <button class="send-btn" onclick="send()">➤</button>
   </div>
@@ -145,6 +153,17 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
   <div class="exp-nav"><button onclick="expSlide(-1)" id="expPrev">← Prev</button><div class="exp-dots" id="expDots"></div><button onclick="expSlide(1)" class="primary" id="expNext">Next →</button></div>
 </div>
 
+<!-- Camera overlay -->
+<div class="camera-overlay" id="cameraOverlay">
+  <video id="cameraVideo" autoplay playsinline></video>
+  <div class="camera-toolbar">
+    <button class="camera-swap" onclick="swapCamera()" title="Flip camera">🔄</button>
+    <button class="camera-shutter" onclick="captureFrame()"></button>
+    <button class="camera-swap" onclick="closeCamera()" style="font-size:24px">✕</button>
+  </div>
+</div>
+
+<!-- Crop overlay -->
 <div class="crop-overlay" id="cropOverlay">
   <div class="crop-toolbar">
     <button onclick="cancelCrop()">Cancel</button>
@@ -161,10 +180,105 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
 </div>
 
 <script>
-const PROBLEMS=[{k:'linear equation solve for x 5(-3x-2)-(x-3)=-4(4x+5)+13 identity',topic:'Linear Equations',q:'5(-3x-2)-(x-3) = -4(4x+5)+13',s:'<strong>Step 1: Expand both sides</strong><br>Left: -15x-10-x+3 = <code>-16x-7</code><br>Right: -16x-20+13 = <code>-16x-7</code><br><br><strong>Step 2: Compare</strong><br><code>-16x-7 = -16x-7</code><br><br><strong>Step 3: Conclusion</strong><br>Both sides are identical → <strong>0 = 0</strong><br><br>✅ <strong>All real numbers are solutions.</strong> This is an identity equation.',tips:"• When both sides simplify to the same expression, it's an identity<br>• Always expand fully before concluding<br>• Check: plug x=0 → both sides = -7 ✓"},{k:'factor polynomial x3 x^3 4x2 4x^2 7x 10 cubic P(x) roots',topic:'Polynomial Factoring',q:'Factor P(x)=x³−4x²−7x+10',s:'<strong>Step 1: Rational Root Theorem</strong><br>Possible roots: ±1, ±2, ±5, ±10<br><br><strong>Step 2: Test x=1</strong><br>P(1)=1−4−7+10=<strong>0 ✓</strong> → (x−1) is a factor<br><br><strong>Step 3: Polynomial division</strong><br>P(x)÷(x−1) = x²−3x−10<br><br><strong>Step 4: Factor the quadratic</strong><br>x²−3x−10 = (x−5)(x+2)<br><br>✅ <strong>P(x) = (x−1)(x−5)(x+2)</strong>',tips:"• Always test ±1 first — it's the most common root<br>• Use synthetic division for speed<br>• Verify by expanding: (x−1)(x−5)(x+2) = x³−4x²−7x+10 ✓"},{k:'quadratic formula solve 2x2 2x^2 7x -15 0 discriminant roots parabola',topic:'Quadratic Formula',q:'2x²+7x−15=0',s:'<strong>Step 1: Identify coefficients</strong><br>a=2, b=7, c=−15<br><br><strong>Step 2: Discriminant</strong><br>b²−4ac = 49−4(2)(−15) = 49+120 = <strong>169</strong><br><br><strong>Step 3: Square root</strong><br>√169 = <strong>13</strong><br><br><strong>Step 4: Apply formula</strong><br>x = (−7±13)/4<br><br><strong>Step 5: Two solutions</strong><br>x₁ = (−7+13)/4 = 6/4 = <strong>3/2</strong><br>x₂ = (−7−13)/4 = −20/4 = <strong>−5</strong><br><br>✅ <strong>x = 1.5 or x = −5</strong>',tips:'• Discriminant > 0 → two real solutions<br>• 169 is a perfect square (13²) → nice solutions<br>• Could also factor: (2x−3)(x+5)=0'},{k:'exponential solve 6*3^x 6·3^x 162 power base log',topic:'Exponential Equations',q:'6·3ˣ = 162',s:'<strong>Step 1: Isolate exponential</strong><br>3ˣ = 162/6 = <strong>27</strong><br><br><strong>Step 2: Express as powers of 3</strong><br>27 = 3³<br><br><strong>Step 3: Equate exponents</strong><br>3ˣ = 3³ → <strong>x = 3</strong><br><br>✅ <strong>x = 3</strong><br><em>Check: 6·3³ = 6·27 = 162 ✓</em>',tips:"• Get the exponential term alone before taking logs<br>• Look for powers of the base first<br>• If base doesn't match, use logarithms"},{k:'arithmetic sequence find 30th term a=7 a15=-35',topic:'Arithmetic Sequences',q:'a₁=7, a₁₅=−35. Find a₃₀',s:'<strong>Step 1: Formula</strong><br>aₙ = a₁ + (n−1)d<br><br><strong>Step 2: Find d using a₁₅</strong><br>−35 = 7 + 14d<br>14d = −42<br><strong>d = −3</strong><br><br><strong>Step 3: Find a₃₀</strong><br>a₃₀ = 7 + 29(−3)<br>= 7 − 87<br>= <strong>−80</strong><br><br>✅ <strong>a₃₀ = −80</strong>',tips:'• d = (aₙ−a₁)/(n−1)<br>• Common difference can be negative<br>• Each term decreases by 3'},{k:'trigonometry trig sin cos 2cos²x 2cos^2x 3sinx 3 0 360 degrees identity',topic:'Trigonometric Equations',q:'2cos²x+3sinx=3, 0°≤x≤360°',s:'<strong>Step 1: Use identity</strong><br>cos²x = 1−sin²x<br>2(1−sin²x)+3sinx=3<br><br><strong>Step 2: Simplify</strong><br>2−2sin²x+3sinx=3<br>−2sin²x+3sinx−1=0<br>2sin²x−3sinx+1=0<br><br><strong>Step 3: Let u=sinx</strong><br>2u²−3u+1=0<br>(2u−1)(u−1)=0<br>u=½ or u=1<br><br><strong>Step 4: Solve</strong><br>sinx=½ → x=30°,150°<br>sinx=1 → x=90°<br><br>✅ <strong>x = 30°, 90°, 150°</strong>',tips:'• cos²x+sin²x=1 is the key identity<br>• sinx=½ has two solutions in [0°,360°]<br>• Always check domain restrictions'},{k:'distance between points (-4,-5) (-1,-1)',topic:'Coordinate Geometry',q:'Distance between (−4,−5) and (−1,−1)',s:'<strong>Step 1: Distance formula</strong><br>d = √[(x₂−x₁)²+(y₂−y₁)²]<br><br><strong>Step 2: Plug in</strong><br>d = √[(−1−(−4))²+(−1−(−5))²]<br>= √[(3)²+(4)²]<br>= √[9+16]<br>= √25<br><br>✅ <strong>d = 5</strong><br><em>This is a 3-4-5 right triangle!</em>',tips:'• Double negatives → addition: −1−(−4)=3<br>• Recognize Pythagorean triples: (3,4,5)<br>• Always take the positive root for distance'},{k:'train leaves station 8am 60 mph another train 9am 75 mph 300 miles apart when meet',topic:'Rate × Time = Distance',q:'Train A leaves at 8am at 60mph. Train B leaves at 9am from 300mi away at 75mph toward A. When do they meet?',s:"<strong>Step 1: Define variable</strong><br>Let t = hours after 8:00 AM<br><br><strong>Step 2: Write distances</strong><br>Train A: d₁ = 60t<br>Train B: d₂ = 75(t−1) [left 1hr later]<br><br><strong>Step 3: Set up equation</strong><br>60t + 75(t−1) = 300<br><br><strong>Step 4: Solve</strong><br>60t + 75t − 75 = 300<br>135t = 375<br>t = 375/135 = 25/9 ≈ <strong>2.778 hours</strong><br><br><strong>Step 5: Convert to time</strong><br>2.778h = 2h 47min<br>8:00 + 2:47 = <strong>10:47 AM</strong><br><br>✅ <strong>They meet at 10:47 AM</strong>",tips:"• Key: sum of distances = total separation<br>• The second train's time is (t−1), not t<br>• Verify: 60×2.778=166.7, 75×1.778=133.3, sum=300 ✓"},{k:'work problem pipe fill tank 4 hours 6 hours together',topic:'Work Problems',q:'Pipe A fills a tank in 4 hours. Pipe B fills it in 6 hours. How long together?',s:'<strong>Step 1: Find rates</strong><br>Pipe A: 1/4 tank per hour<br>Pipe B: 1/6 tank per hour<br><br><strong>Step 2: Combined rate</strong><br>1/4 + 1/6 = 3/12 + 2/12 = <strong>5/12</strong> tank per hour<br><br><strong>Step 3: Time to fill</strong><br>Time = 1 ÷ (5/12) = 12/5 = <strong>2.4 hours</strong><br><br>✅ <strong>2 hours 24 minutes</strong>',tips:'• Rate = 1/time for "fill one tank" problems<br>• Add rates for combined work<br>• Time = 1/combined_rate'},{k:'mixture solution concentration 20% percent 50% 30% mix percent how much liter',topic:'Mixture Problems',q:'How much 20% solution must be mixed with 10L of 50% to get 30%?',s:'<strong>Step 1: Let x = liters of 20% solution</strong><br><br><strong>Step 2: Solute balance</strong><br>0.20x + 0.50(10) = 0.30(x+10)<br><br><strong>Step 3: Solve</strong><br>0.20x + 5 = 0.30x + 3<br>5 − 3 = 0.30x − 0.20x<br>2 = 0.10x<br><strong>x = 20 liters</strong><br><br>✅ <strong>20 liters of 20% solution</strong>',tips:'• Set up: solute in = solute out<br>• Total volume = x + 10<br>• Check: (0.2×20+0.5×10)/30 = 9/30 = 30% ✓'},{k:'inclined plane block ramp angle 30 friction coefficient 0.2 find acceleration',topic:'Inclined Plane',q:"Block on 30° incline, μ=0.2. Find acceleration.",s:"<strong>Step 1: Resolve gravity</strong><br>Parallel: mg·sin(30°) = mg·0.5<br>Perpendicular: mg·cos(30°) = mg·0.866<br><br><strong>Step 2: Normal force</strong><br>N = mg·cos(30°) = 0.866mg<br><br><strong>Step 3: Friction</strong><br>f = μN = 0.2×0.866mg = 0.173mg<br><br><strong>Step 4: Net force down ramp</strong><br>F = mg·sin(30°)−f<br>= mg(0.5−0.173) = 0.327mg<br><br><strong>Step 5: Acceleration</strong><br>a = F/m = 0.327g = 0.327×9.8<br>= <strong>3.20 m/s²</strong><br><br>✅ <strong>a = 3.20 m/s² down the ramp</strong>",tips:"• g·sinθ pulls down, friction opposes<br>• If μ>tanθ, block won't slide (μ=0.2<0.577→slides)<br>• Without friction: a=g·sin30°=4.9 m/s²"},{k:'projectile ball thrown launch 20 m/s ms angle 45 degrees max height range motion',topic:'Projectile Motion',q:'Ball thrown at 20 m/s, 45° angle. Find max height and range.',s:'<strong>Step 1: Resolve velocity</strong><br>vₓ = 20·cos(45°) = <strong>14.14 m/s</strong><br>vᵧ = 20·sin(45°) = <strong>14.14 m/s</strong><br><br><strong>Step 2: Max height</strong><br>H = vᵧ²/(2g) = 200/(2×9.8)<br>= <strong>10.2 m</strong><br><br><strong>Step 3: Time of flight</strong><br>T = 2vᵧ/g = 28.28/9.8 = <strong>2.89 s</strong><br><br><strong>Step 4: Range</strong><br>R = vₓ·T = 14.14×2.89 = <strong>40.8 m</strong><br><br>✅ <strong>H=10.2m, R=40.8m</strong>',tips:'• 45° gives maximum range for a given speed<br>• Time up = time down (symmetry)<br>• Air resistance ignored in basic model'},{k:'kinematics car accelerate accelerating rest 2 m/s² ms2 5 seconds sec distance velocity suvat',topic:'Kinematics',q:'Car accelerates at 2 m/s² from rest for 5s. Find final velocity and distance.',s:'<strong>Step 1: Final velocity</strong><br>v = u + at<br>v = 0 + 2×5 = <strong>10 m/s</strong><br><br><strong>Step 2: Distance</strong><br>s = ut + ½at²<br>s = 0 + ½×2×25<br>= <strong>25 m</strong><br><br>Alternatively: s = ½(u+v)t = ½×10×5 = 25m ✓<br><br>✅ <strong>v=10 m/s, s=25 m</strong>',tips:'• SUVAT: s=ut+½at², v=u+at, v²=u²+2as<br>• Average velocity = (u+v)/2 = 5 m/s<br>• Check: 5 m/s × 5s = 25 m ✓'},{k:'balance equation chemical H2 O2 H2O stoichiometry reaction chemistry into plus arrow',topic:'Balancing Equations',q:'Balance: H₂ + O₂ → H₂O',s:'<strong>Step 1: Count atoms</strong><br>Left: H=2, O=2<br>Right: H=2, O=1<br><br><strong>Step 2: Balance O</strong><br>H₂ + O₂ → <strong>2</strong>H₂O<br>Now: H=2,O=2 → H=4,O=2<br><br><strong>Step 3: Balance H</strong><br><strong>2</strong>H₂ + O₂ → 2H₂O<br>Now: H=4,O=2 → H=4,O=2 ✓<br><br>✅ <strong>2H₂ + O₂ → 2H₂O</strong>',tips:'• Balance O last (appears in one compound each side)<br>• Coefficients must be simplest whole numbers<br>• Always recount after each change'},{k:'molar mass calculate glucose C6H12O6',topic:'Molar Mass',q:'Calculate the molar mass of glucose, C₆H₁₂O₆',s:'<strong>Step 1: Atomic masses</strong><br>C = 12.01 g/mol<br>H = 1.008 g/mol<br>O = 16.00 g/mol<br><br><strong>Step 2: Multiply by counts</strong><br>C: 6 × 12.01 = 72.06<br>H: 12 × 1.008 = 12.10<br>O: 6 × 16.00 = 96.00<br><br><strong>Step 3: Sum</strong><br>72.06 + 12.10 + 96.00 = <strong>180.16 g/mol</strong><br><br>✅ <strong>180.16 g/mol</strong>',tips:'• Use periodic table for atomic masses<br>• Watch subscripts: C₆ means 6 carbons<br>• Round to 2 decimal places typically'},{k:'limiting reagent 2H2 O2 4 mol H2 3 mol O2 excess',topic:'Limiting Reagent',q:'2H₂+O₂→2H₂O. 4 mol H₂, 3 mol O₂. Find limiting reagent.',s:'<strong>Step 1: Mole ratio from equation</strong><br>2 mol H₂ : 1 mol O₂<br><br><strong>Step 2: How much O₂ needed?</strong><br>4 mol H₂ × (1 O₂/2 H₂) = <strong>2 mol O₂ needed</strong><br><br><strong>Step 3: Compare</strong><br>Have: 3 mol O₂<br>Need: 2 mol O₂<br>O₂ is in <strong>excess</strong>, H₂ is <strong>limiting</strong><br><br><strong>Step 4: Products from limiting reagent</strong><br>4 mol H₂ × (2 H₂O/2 H₂) = <strong>4 mol H₂O</strong><br><br>✅ <strong>H₂ is limiting → 4 mol H₂O produced</strong>',tips:'• Limiting reagent = the one that runs out first<br>• Calculate how much of EACH reactant you need<br>• Products depend on limiting reagent, not excess'}];
+// ═══════════════ PROBLEM BANK ═══════════════
+// Each entry: {keywords, topic, problem, solution, tips}
+const PROBLEMS = [
+  // ── Algebra ──
+  {k:'linear equation solve for x 5(-3x-2)-(x-3)=-4(4x+5)+13 identity', topic:'Linear Equations',
+   q:'5(-3x-2)-(x-3) = -4(4x+5)+13',
+   s:`<strong>Step 1: Expand both sides</strong><br>Left: -15x-10-x+3 = <code>-16x-7</code><br>Right: -16x-20+13 = <code>-16x-7</code><br><br><strong>Step 2: Compare</strong><br><code>-16x-7 = -16x-7</code><br><br><strong>Step 3: Conclusion</strong><br>Both sides are identical → <strong>0 = 0</strong><br><br>✅ <strong>All real numbers are solutions.</strong> This is an identity equation.`,
+   tips:'• When both sides simplify to the same expression, it\'s an identity<br>• Always expand fully before concluding<br>• Check: plug x=0 → both sides = -7 ✓'},
+  {k:'factor polynomial x3 x^3 4x2 4x^2 7x 10 cubic P(x) roots', topic:'Polynomial Factoring',
+   q:'Factor P(x)=x³−4x²−7x+10',
+   s:`<strong>Step 1: Rational Root Theorem</strong><br>Possible roots: ±1, ±2, ±5, ±10<br><br><strong>Step 2: Test x=1</strong><br>P(1)=1−4−7+10=<strong>0 ✓</strong> → (x−1) is a factor<br><br><strong>Step 3: Polynomial division</strong><br>P(x)÷(x−1) = x²−3x−10<br><br><strong>Step 4: Factor the quadratic</strong><br>x²−3x−10 = (x−5)(x+2)<br><br>✅ <strong>P(x) = (x−1)(x−5)(x+2)</strong>`,
+   tips:'• Always test ±1 first — it\'s the most common root<br>• Use synthetic division for speed<br>• Verify by expanding: (x−1)(x−5)(x+2) = x³−4x²−7x+10 ✓'},
+  {k:'quadratic formula solve 2x2 2x^2 7x -15 0 discriminant roots parabola', topic:'Quadratic Formula',
+   q:'2x²+7x−15=0',
+   s:`<strong>Step 1: Identify coefficients</strong><br>a=2, b=7, c=−15<br><br><strong>Step 2: Discriminant</strong><br>b²−4ac = 49−4(2)(−15) = 49+120 = <strong>169</strong><br><br><strong>Step 3: Square root</strong><br>√169 = <strong>13</strong><br><br><strong>Step 4: Apply formula</strong><br>x = (−7±13)/4<br><br><strong>Step 5: Two solutions</strong><br>x₁ = (−7+13)/4 = 6/4 = <strong>3/2</strong><br>x₂ = (−7−13)/4 = −20/4 = <strong>−5</strong><br><br>✅ <strong>x = 1.5 or x = −5</strong>`,
+   tips:'• Discriminant > 0 → two real solutions<br>• 169 is a perfect square (13²) → nice solutions<br>• Could also factor: (2x−3)(x+5)=0'},
+  {k:'exponential solve 6*3^x 6·3^x 162 power base log', topic:'Exponential Equations',
+   q:'6·3ˣ = 162',
+   s:`<strong>Step 1: Isolate exponential</strong><br>3ˣ = 162/6 = <strong>27</strong><br><br><strong>Step 2: Express as powers of 3</strong><br>27 = 3³<br><br><strong>Step 3: Equate exponents</strong><br>3ˣ = 3³ → <strong>x = 3</strong><br><br>✅ <strong>x = 3</strong><br><em>Check: 6·3³ = 6·27 = 162 ✓</em>`,
+   tips:'• Get the exponential term alone before taking logs<br>• Look for powers of the base first<br>• If base doesn\'t match, use logarithms'},
+  {k:'arithmetic sequence find 30th term a=7 a15=-35', topic:'Arithmetic Sequences',
+   q:'a₁=7, a₁₅=−35. Find a₃₀',
+   s:`<strong>Step 1: Formula</strong><br>aₙ = a₁ + (n−1)d<br><br><strong>Step 2: Find d using a₁₅</strong><br>−35 = 7 + 14d<br>14d = −42<br><strong>d = −3</strong><br><br><strong>Step 3: Find a₃₀</strong><br>a₃₀ = 7 + 29(−3)<br>= 7 − 87<br>= <strong>−80</strong><br><br>✅ <strong>a₃₀ = −80</strong>`,
+   tips:'• d = (aₙ−a₁)/(n−1)<br>• Common difference can be negative<br>• Each term decreases by 3'},
+  {k:'trigonometry trig sin cos 2cos²x 2cos^2x 3sinx 3 0 360 degrees identity', topic:'Trigonometric Equations',
+   q:'2cos²x+3sinx=3, 0°≤x≤360°',
+   s:`<strong>Step 1: Use identity</strong><br>cos²x = 1−sin²x<br>2(1−sin²x)+3sinx=3<br><br><strong>Step 2: Simplify</strong><br>2−2sin²x+3sinx=3<br>−2sin²x+3sinx−1=0<br>2sin²x−3sinx+1=0<br><br><strong>Step 3: Let u=sinx</strong><br>2u²−3u+1=0<br>(2u−1)(u−1)=0<br>u=½ or u=1<br><br><strong>Step 4: Solve</strong><br>sinx=½ → x=30°,150°<br>sinx=1 → x=90°<br><br>✅ <strong>x = 30°, 90°, 150°</strong>`,
+   tips:'• cos²x+sin²x=1 is the key identity<br>• sinx=½ has two solutions in [0°,360°]<br>• Always check domain restrictions'},
+  {k:'distance between points (-4,-5) (-1,-1)', topic:'Coordinate Geometry',
+   q:'Distance between (−4,−5) and (−1,−1)',
+   s:`<strong>Step 1: Distance formula</strong><br>d = √[(x₂−x₁)²+(y₂−y₁)²]<br><br><strong>Step 2: Plug in</strong><br>d = √[(−1−(−4))²+(−1−(−5))²]<br>= √[(3)²+(4)²]<br>= √[9+16]<br>= √25<br><br>✅ <strong>d = 5</strong><br><em>This is a 3-4-5 right triangle!</em>`,
+   tips:'• Double negatives → addition: −1−(−4)=3<br>• Recognize Pythagorean triples: (3,4,5)<br>• Always take the positive root for distance'},
 
-function matchProblem(t){const l=t.toLowerCase().replace(/[^a-z0-9\s\+\-\=\(\)\^°]/g,' ').replace(/\s+/g,' ').trim();let b=null,s=0;for(const p of PROBLEMS){const w=p.k.split(' ');let c=0;for(const x of w){if(l.includes(x))c++;if(x.length>3){for(let i=0;i<x.length-3;i++){if(l.includes(x.substring(i,i+4))){c+=0.3;break}}}}c/=w.length;if(c>s){s=c;b=p}}return s>=0.20?b:null}
+  // ── Word Problems ──
+  {k:'train leaves station 8am 60 mph another train 9am 75 mph 300 miles apart when meet', topic:'Rate × Time = Distance',
+   q:'Train A leaves at 8am at 60mph. Train B leaves at 9am from 300mi away at 75mph toward A. When do they meet?',
+   s:`<strong>Step 1: Define variable</strong><br>Let t = hours after 8:00 AM<br><br><strong>Step 2: Write distances</strong><br>Train A: d₁ = 60t<br>Train B: d₂ = 75(t−1) [left 1hr later]<br><br><strong>Step 3: Set up equation</strong><br>60t + 75(t−1) = 300<br><br><strong>Step 4: Solve</strong><br>60t + 75t − 75 = 300<br>135t = 375<br>t = 375/135 = 25/9 ≈ <strong>2.778 hours</strong><br><br><strong>Step 5: Convert to time</strong><br>2.778h = 2h 47min<br>8:00 + 2:47 = <strong>10:47 AM</strong><br><br>✅ <strong>They meet at 10:47 AM</strong>`,
+   tips:'• Key: sum of distances = total separation<br>• The second train\'s time is (t−1), not t<br>• Verify: 60×2.778=166.7, 75×1.778=133.3, sum=300 ✓'},
+  {k:'work problem pipe fill tank 4 hours 6 hours together', topic:'Work Problems',
+   q:'Pipe A fills a tank in 4 hours. Pipe B fills it in 6 hours. How long together?',
+   s:`<strong>Step 1: Find rates</strong><br>Pipe A: 1/4 tank per hour<br>Pipe B: 1/6 tank per hour<br><br><strong>Step 2: Combined rate</strong><br>1/4 + 1/6 = 3/12 + 2/12 = <strong>5/12</strong> tank per hour<br><br><strong>Step 3: Time to fill</strong><br>Time = 1 ÷ (5/12) = 12/5 = <strong>2.4 hours</strong><br><br>✅ <strong>2 hours 24 minutes</strong>`,
+   tips:'• Rate = 1/time for "fill one tank" problems<br>• Add rates for combined work<br>• Time = 1/combined_rate'},
+  {k:'mixture solution concentration 20% percent 50% 30% mix percent how much liter', topic:'Mixture Problems',
+   q:'How much 20% solution must be mixed with 10L of 50% to get 30%?',
+   s:`<strong>Step 1: Let x = liters of 20% solution</strong><br><br><strong>Step 2: Solute balance</strong><br>0.20x + 0.50(10) = 0.30(x+10)<br><br><strong>Step 3: Solve</strong><br>0.20x + 5 = 0.30x + 3<br>5 − 3 = 0.30x − 0.20x<br>2 = 0.10x<br><strong>x = 20 liters</strong><br><br>✅ <strong>20 liters of 20% solution</strong>`,
+   tips:'• Set up: solute in = solute out<br>• Total volume = x + 10<br>• Check: (0.2×20+0.5×10)/30 = 9/30 = 30% ✓'},
 
+  // ── Physics ──
+  {k:'inclined plane block ramp angle 30 friction coefficient 0.2 find acceleration', topic:'Inclined Plane',
+   q:'Block on 30° incline, μ=0.2. Find acceleration.',
+   s:`<strong>Step 1: Resolve gravity</strong><br>Parallel: mg·sin(30°) = mg·0.5<br>Perpendicular: mg·cos(30°) = mg·0.866<br><br><strong>Step 2: Normal force</strong><br>N = mg·cos(30°) = 0.866mg<br><br><strong>Step 3: Friction</strong><br>f = μN = 0.2×0.866mg = 0.173mg<br><br><strong>Step 4: Net force down ramp</strong><br>F = mg·sin(30°)−f<br>= mg(0.5−0.173) = 0.327mg<br><br><strong>Step 5: Acceleration</strong><br>a = F/m = 0.327g = 0.327×9.8<br>= <strong>3.20 m/s²</strong><br><br>✅ <strong>a = 3.20 m/s² down the ramp</strong>`,
+   tips:'• g·sinθ pulls down, friction opposes<br>• If μ>tanθ, block won\'t slide (μ=0.2<0.577→slides)<br>• Without friction: a=g·sin30°=4.9 m/s²'},
+  {k:'projectile ball thrown launch 20 m/s ms angle 45 degrees max height range motion', topic:'Projectile Motion',
+   q:'Ball thrown at 20 m/s, 45° angle. Find max height and range.',
+   s:`<strong>Step 1: Resolve velocity</strong><br>vₓ = 20·cos(45°) = <strong>14.14 m/s</strong><br>vᵧ = 20·sin(45°) = <strong>14.14 m/s</strong><br><br><strong>Step 2: Max height</strong><br>H = vᵧ²/(2g) = 200/(2×9.8)<br>= <strong>10.2 m</strong><br><br><strong>Step 3: Time of flight</strong><br>T = 2vᵧ/g = 28.28/9.8 = <strong>2.89 s</strong><br><br><strong>Step 4: Range</strong><br>R = vₓ·T = 14.14×2.89 = <strong>40.8 m</strong><br><br>✅ <strong>H=10.2m, R=40.8m</strong>`,
+   tips:'• 45° gives maximum range for a given speed<br>• Time up = time down (symmetry)<br>• Air resistance ignored in basic model'},
+  {k:'kinematics car accelerate accelerating rest 2 m/s² ms2 5 seconds sec distance velocity suvat', topic:'Kinematics',
+   q:'Car accelerates at 2 m/s² from rest for 5s. Find final velocity and distance.',
+   s:`<strong>Step 1: Final velocity</strong><br>v = u + at<br>v = 0 + 2×5 = <strong>10 m/s</strong><br><br><strong>Step 2: Distance</strong><br>s = ut + ½at²<br>s = 0 + ½×2×25<br>= <strong>25 m</strong><br><br>Alternatively: s = ½(u+v)t = ½×10×5 = 25m ✓<br><br>✅ <strong>v=10 m/s, s=25 m</strong>`,
+   tips:'• SUVAT: s=ut+½at², v=u+at, v²=u²+2as<br>• Average velocity = (u+v)/2 = 5 m/s<br>• Check: 5 m/s × 5s = 25 m ✓'},
+
+  // ── Chemistry ──
+  {k:'balance equation chemical H2 O2 H2O stoichiometry reaction chemistry into plus arrow', topic:'Balancing Equations',
+   q:'Balance: H₂ + O₂ → H₂O',
+   s:`<strong>Step 1: Count atoms</strong><br>Left: H=2, O=2<br>Right: H=2, O=1<br><br><strong>Step 2: Balance O</strong><br>H₂ + O₂ → <strong>2</strong>H₂O<br>Now: H=2,O=2 → H=4,O=2<br><br><strong>Step 3: Balance H</strong><br><strong>2</strong>H₂ + O₂ → 2H₂O<br>Now: H=4,O=2 → H=4,O=2 ✓<br><br>✅ <strong>2H₂ + O₂ → 2H₂O</strong>`,
+   tips:'• Balance O last (appears in one compound each side)<br>• Coefficients must be simplest whole numbers<br>• Always recount after each change'},
+  {k:'molar mass calculate glucose C6H12O6', topic:'Molar Mass',
+   q:'Calculate the molar mass of glucose, C₆H₁₂O₆',
+   s:`<strong>Step 1: Atomic masses</strong><br>C = 12.01 g/mol<br>H = 1.008 g/mol<br>O = 16.00 g/mol<br><br><strong>Step 2: Multiply by counts</strong><br>C: 6 × 12.01 = 72.06<br>H: 12 × 1.008 = 12.10<br>O: 6 × 16.00 = 96.00<br><br><strong>Step 3: Sum</strong><br>72.06 + 12.10 + 96.00 = <strong>180.16 g/mol</strong><br><br>✅ <strong>180.16 g/mol</strong>`,
+   tips:'• Use periodic table for atomic masses<br>• Watch subscripts: C₆ means 6 carbons<br>• Round to 2 decimal places typically'},
+  {k:'limiting reagent 2H2 O2 4 mol H2 3 mol O2 excess', topic:'Limiting Reagent',
+   q:'2H₂+O₂→2H₂O. 4 mol H₂, 3 mol O₂. Find limiting reagent.',
+   s:`<strong>Step 1: Mole ratio from equation</strong><br>2 mol H₂ : 1 mol O₂<br><br><strong>Step 2: How much O₂ needed?</strong><br>4 mol H₂ × (1 O₂/2 H₂) = <strong>2 mol O₂ needed</strong><br><br><strong>Step 3: Compare</strong><br>Have: 3 mol O₂<br>Need: 2 mol O₂<br>O₂ is in <strong>excess</strong>, H₂ is <strong>limiting</strong><br><br><strong>Step 4: Products from limiting reagent</strong><br>4 mol H₂ × (2 H₂O/2 H₂) = <strong>4 mol H₂O</strong><br><br>✅ <strong>H₂ is limiting → 4 mol H₂O produced</strong>`,
+   tips:'• Limiting reagent = the one that runs out first<br>• Calculate how much of EACH reactant you need<br>• Products depend on limiting reagent, not excess'},
+];
+
+// Keyword matching
+function matchProblem(text) {
+  const lower = text.toLowerCase().replace(/[^a-z0-9\s\+\-\=\(\)\^°]/g,' ').replace(/\s+/g,' ').trim();
+  let best = null, bestScore = 0;
+  for (const p of PROBLEMS) {
+    const kw = p.k.split(' ');
+    let score = 0;
+    for (const w of kw) {
+      if (lower.includes(w)) score++;
+      // Partial match for longer keywords
+      if (w.length > 3) {
+        for (let i=0;i<w.length-3;i++) {
+          if (lower.includes(w.substring(i,i+4))) { score+=0.3; break; }
+        }
+      }
+    }
+    score = score / kw.length; // normalize
+    if (score > bestScore) { bestScore = score; best = p; }
+  }
+  return bestScore >= 0.20 ? best : null;
+}
+
+// ════════════ APP LOGIC ════════════
 const SUBJECTS=[{name:'Mathematics',icon:'📐'},{name:'Physics',icon:'⚡'},{name:'Chemistry',icon:'🧪'},{name:'Biology',icon:'🧬'},{name:'History',icon:'📜'},{name:'Economics',icon:'📈'},{name:'English',icon:'📖'},{name:'Computer Science',icon:'💻'},{name:'Psychology',icon:'🧠'},{name:'Geography',icon:'🌍'},{name:'Languages',icon:'🗣️'},{name:'Law',icon:'⚖️'},{name:'Business',icon:'💼'},{name:'Sociology',icon:'👥'}];
 let selectedSubjects=new Set(['Mathematics']),tutorMode='solve',expSlides=[],expIdx=0;
 
@@ -179,34 +293,308 @@ function saveSubjects(){if(selectedSubjects.size===0)selectedSubjects.add('Mathe
 function setMode(m){tutorMode=m;document.querySelectorAll('.mode-chip').forEach(c=>c.classList.remove('active'));document.querySelector(`[data-mode="${m}"]`).classList.add('active')}
 function addMsg(role,html){const c=document.getElementById('chat');c.innerHTML+=`<div class="chat-msg ${role}">${html}</div>`;c.scrollTop=c.scrollHeight}
 
-function send(){const i=document.getElementById('msgInput'),t=i.value.trim();if(!t)return;addMsg('user',escapeHtml(t));i.value='';const p=matchProblem(t);if(tutorMode==='socratic'){addMsg('ai',`🤔 <strong>Socratic mode:</strong> What do YOU think the answer is?<br><br>Try to work it out yourself first — I'll confirm if you're right and help if you're stuck.`)}else if(p){const h=`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;const as=[{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>💡 Tips for ${p.topic}:</strong><br><br>${p.tips}`)},{t:'🔄 Similar',c:()=>sendPretyped('Give me another '+p.topic.split(' ')[0].toLowerCase()+' problem')}];addMsg('ai',h+renderActions(as))}else{const r=tutorMode==='explain'?`📚 <strong>Concept Overview</strong><br><br>Try giving me a specific problem — like "solve 2x²+7x-15=0" or "a train leaves at 8am..." — and I'll walk you through it step by step.`:`I didn't find an exact match. Try:<br><br>• <strong>"Solve 2x²+7x−15=0"</strong><br>• <strong>"Factor x³−4x²−7x+10"</strong><br>• <strong>"Balance H₂+O₂→H₂O"</strong><br><br>Or snap a photo 📷!`;addMsg('ai',r+renderActions(t.length>20?[{t:'Try rephrasing',c:()=>sendPretyped('Solve: '+t)}]:[]))}}
-function sendPretyped(m){addMsg('user',m);const p=matchProblem(m);if(p){addMsg('ai',`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+renderActions([{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>Tips:</strong><br>${p.tips}`)}]))}else{addMsg('ai',`Let me help with that. Can you rephrase?`)}}
-function renderActions(as){return`<div class="action-btns">${as.map((a,i)=>`<button class="action-btn${i===0&&!a.cls?' primary':a.cls?' '+a.cls:''}" onclick="(${a.c.toString()})()">${a.t}</button>`).join('')}</div>`}
+function send(){
+  const input=document.getElementById('msgInput'),text=input.value.trim();
+  if(!text)return;
+  addMsg('user',escapeHtml(text));input.value='';
+  const p=matchProblem(text);
 
+  if(tutorMode==='socratic'){
+    addMsg('ai',`🤔 <strong>Socratic mode:</strong> What do YOU think the answer is?<br><br>Try to work it out yourself first — I'll confirm if you're right and help if you're stuck.`);
+  }else if(p){
+    const html=`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
+    const actions=[{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>💡 Tips for ${p.topic}:</strong><br><br>${p.tips}`)},{t:'🔄 Similar',c:()=>sendPretyped('Give me another '+p.topic.split(' ')[0].toLowerCase()+' problem')}];
+    addMsg('ai',html+renderActions(actions));
+  }else{
+    const resp=tutorMode==='explain'
+      ?`📚 <strong>Concept Overview</strong><br><br>Try giving me a specific problem — like "solve 2x²+7x-15=0" or "a train leaves at 8am..." — and I'll walk you through it step by step.`
+      :`I didn't find an exact match for that problem. Try:<br><br>• <strong>"Solve 2x²+7x−15=0"</strong><br>• <strong>"Factor x³−4x²−7x+10"</strong><br>• <strong>"A train leaves at 8am at 60mph..."</strong><br>• <strong>"Balance H₂+O₂→H₂O"</strong><br>• <strong>"Block on 30° incline, μ=0.2"</strong><br><br>Or snap a photo 📷 of your homework!`;
+    const actions=text.length>20?[{t:'Try rephrasing',c:()=>sendPretyped('Solve: '+text)}]:[];
+    addMsg('ai',resp+renderActions(actions));
+  }
+}
+
+function sendPretyped(msg){
+  addMsg('user',msg);
+  const p=matchProblem(msg);
+  if(p){
+    addMsg('ai',`<span class="badge badge-ai">${p.topic}</span><br><br><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code><br><br>${p.s}<br><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+renderActions([{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>Tips:</strong><br>${p.tips}`)}]));
+  }else{
+    addMsg('ai',`Let me help with that. Can you rephrase or give me a specific equation?`);
+  }
+}
+
+function renderActions(actions){
+  return`<div class="action-btns">${actions.map((a,i)=>`<button class="action-btn${i===0&&!a.cls?' primary':a.cls?' '+a.cls:''}" onclick="(${a.c.toString()})()">${a.t}</button>`).join('')}</div>`;
+}
+
+// ── Image pick + crop ──
 let cropImage=null,cvw=0,cvh=0,cropRect=null,dragMode=null,dragStart=null,dragOrig=null;
-let lastImageDataUrl=null,lastImageOrig=null;
+let lastImageDataUrl=null, lastImageOrig=null; // stored for answer card generation
+let cameraStream=null,cameraFacing='environment'; // back camera default
 const HANDLE=10;
-function pickImage(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const m=new Image();m.onload=()=>{cropImage=m;initCrop()};m.src=r.result};r.readAsDataURL(f);input.value=''}
-function initCrop(){const o=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');const mW=window.innerWidth-32,mH=window.innerHeight-180;let w=cropImage.width,h=cropImage.height;const sc=Math.min(mW/w,mH/h,1);w=Math.round(w*sc);h=Math.round(h*sc);cvw=w;cvh=h;cv.width=w;cv.height=h;const mg=Math.max(8,Math.round(Math.min(w,h)*.05));cropRect={x:mg,y:mg,w:w-mg*2,h:h-mg*2};o.classList.add('open');redrawCrop();setupCropEvents()}
-function redrawCrop(){const cv=document.getElementById('cropCanvas'),ctx=cv.getContext('2d');ctx.drawImage(cropImage,0,0,cvw,cvh);if(!cropRect)return;ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,cvw,cropRect.y);ctx.fillRect(0,cropRect.y,cropRect.x,cropRect.h);ctx.fillRect(cropRect.x+cropRect.w,cropRect.y,cvw-cropRect.x-cropRect.w,cropRect.h);ctx.fillRect(0,cropRect.y+cropRect.h,cvw,cvh-cropRect.y-cropRect.h);ctx.strokeStyle='#F5A623';ctx.lineWidth=2;ctx.strokeRect(cropRect.x,cropRect.y,cropRect.w,cropRect.h);ctx.fillStyle='#F5A623';const h=HANDLE,cx=cropRect.x+cropRect.w/2,cy=cropRect.y+cropRect.h/2;const ps=[[cropRect.x,cropRect.y],[cx,cropRect.y],[cropRect.x+cropRect.w,cropRect.y],[cropRect.x+cropRect.w,cy],[cropRect.x+cropRect.w,cropRect.y+cropRect.h],[cx,cropRect.y+cropRect.h],[cropRect.x,cropRect.y+cropRect.h],[cropRect.x,cy]];ps.forEach(([px,py])=>{ctx.fillRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#F5A623';ctx.lineWidth=2})}
-function getHandle(x,y){if(!cropRect)return null;const cx=cropRect.x+cropRect.w/2,cy=cropRect.y+cropRect.h/2;const ps={tl:[cropRect.x,cropRect.y],tm:[cx,cropRect.y],tr:[cropRect.x+cropRect.w,cropRect.y],mr:[cropRect.x+cropRect.w,cy],br:[cropRect.x+cropRect.w,cropRect.y+cropRect.h],bm:[cx,cropRect.y+cropRect.h],bl:[cropRect.x,cropRect.y+cropRect.h],ml:[cropRect.x,cy]};for(const[k,[px,py]]of Object.entries(ps))if(Math.abs(x-px)<=HANDLE&&Math.abs(y-py)<=HANDLE)return k;if(x>=cropRect.x&&x<=cropRect.x+cropRect.w&&y>=cropRect.y&&y<=cropRect.y+cropRect.h)return'move';return null}
-function handleResize(h,dx,dy){const r={...dragOrig};if(h.includes('l')){r.x=Math.max(0,dragOrig.x+dx);r.w=Math.max(20,dragOrig.w-dx)}if(h.includes('r')){r.w=Math.max(20,dragOrig.w+dx)}if(h.includes('t')){r.y=Math.max(0,dragOrig.y+dy);r.h=Math.max(20,dragOrig.h-dy)}if(h.includes('b')){r.h=Math.max(20,dragOrig.h+dy)}if(r.x+r.w>cvw)r.w=cvw-r.x;if(r.y+r.h>cvh)r.h=cvh-r.y;cropRect=r;redrawCrop()}
-function setupCropEvents(){const cv=document.getElementById('cropCanvas');cv.onpointerdown=e=>{const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const h=getHandle(x,y);dragStart={x,y};dragOrig=cropRect?{...cropRect}:null;if(h){dragMode=h}else{cropRect=null;dragMode='draw'}if(dragMode==='draw'){cropRect={x,y,w:0,h:0};redrawCrop()}cv.setPointerCapture(e.pointerId)};cv.onpointermove=e=>{if(!dragMode)return;const r=cv.getBoundingClientRect(),x=Math.max(0,Math.min(cvw,e.clientX-r.left)),y=Math.max(0,Math.min(cvh,e.clientY-r.top));const dx=x-dragStart.x,dy=y-dragStart.y;if(dragMode==='draw'){cropRect={x:Math.min(dragStart.x,x),y:Math.min(dragStart.y,y),w:Math.abs(x-dragStart.x),h:Math.abs(y-dragStart.y)}}else if(dragMode==='move'){let nx=dragOrig.x+dx,ny=dragOrig.y+dy;nx=Math.max(0,Math.min(cvw-cropRect.w,nx));ny=Math.max(0,Math.min(cvh-cropRect.h,ny));cropRect={x:nx,y:ny,w:dragOrig.w,h:dragOrig.h}}else{handleResize(dragMode,dx,dy)}redrawCrop()};cv.onpointerup=()=>{if(dragMode==='draw'&&cropRect&&cropRect.w<20)cropRect=null;dragMode=null;dragStart=null;dragOrig=null;redrawCrop()}}
-function sendFullImage(){document.getElementById('cropOverlay').classList.remove('open');const o=document.createElement('canvas');o.width=cropImage.width;o.height=cropImage.height;o.getContext('2d').drawImage(cropImage,0,0);lastImageDataUrl=o.toDataURL('image/jpeg',.85);lastImageOrig=cropImage;addMsg('user',`<img src="${lastImageDataUrl}"><div class="chat-img-label"><span class="badge badge-cam">📷 Photo</span></div>`);analyzePhoto();cropImage=null}
+
+// ── Camera (getUserMedia — reliable on mobile) ──
+async function openCamera(){
+  try{
+    cameraFacing='environment';
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    const v=document.getElementById('cameraVideo');v.srcObject=cameraStream;
+    document.getElementById('cameraOverlay').classList.add('open');
+  }catch(e){
+    // Fallback: try front camera or any camera
+    try{
+      cameraFacing='user';
+      cameraStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+      const v=document.getElementById('cameraVideo');v.srcObject=cameraStream;
+      document.getElementById('cameraOverlay').classList.add('open');
+    }catch(e2){
+      alert('Camera not available. Use the 📎 upload button instead.');
+    }
+  }
+}
+async function swapCamera(){
+  if(!cameraStream)return;
+  cameraStream.getTracks().forEach(t=>t.stop());
+  cameraFacing=cameraFacing==='environment'?'user':'environment';
+  try{
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:cameraFacing},audio:false});
+    document.getElementById('cameraVideo').srcObject=cameraStream;
+  }catch(e){}
+}
+function closeCamera(){
+  if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
+  document.getElementById('cameraOverlay').classList.remove('open');
+}
+function captureFrame(){
+  const v=document.getElementById('cameraVideo');
+  const cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;
+  cv.getContext('2d').drawImage(v,0,0);
+  const dataUrl=cv.toDataURL('image/jpeg',.85);
+  closeCamera();
+  // Create Image from data URL and feed into crop flow
+  const img=new Image();img.onload=()=>{cropImage=img;initCrop()};img.src=dataUrl;
+}
+
+function pickImage(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const img=new Image();img.onload=()=>{cropImage=img;initCrop()};img.src=reader.result;
+  };
+  reader.readAsDataURL(file);input.value='';
+}
+function initCrop(){
+  const ov=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');
+  // Fit image to viewport
+  const maxW=window.innerWidth-32,maxH=window.innerHeight-180;
+  let w=cropImage.width,h=cropImage.height;
+  const scale=Math.min(maxW/w,maxH/h,1);w=Math.round(w*scale);h=Math.round(h*scale);
+  cvw=w;cvh=h;cv.width=w;cv.height=h;
+  // Start with full image as crop rect
+  const margin=Math.max(8,Math.round(Math.min(w,h)*.05));
+  cropRect={x:margin,y:margin,w:w-margin*2,h:h-margin*2};
+  ov.classList.add('open');
+  redrawCrop();
+  setupCropEvents();
+}
+function redrawCrop(){
+  const cv=document.getElementById('cropCanvas'),ctx=cv.getContext('2d');
+  ctx.drawImage(cropImage,0,0,cvw,cvh);
+  if(!cropRect)return;
+  // Dim outside
+  ctx.fillStyle='rgba(0,0,0,.45)';
+  ctx.fillRect(0,0,cvw,cropRect.y);
+  ctx.fillRect(0,cropRect.y,cropRect.x,cropRect.h);
+  ctx.fillRect(cropRect.x+cropRect.w,cropRect.y,cvw-cropRect.x-cropRect.w,cropRect.h);
+  ctx.fillRect(0,cropRect.y+cropRect.h,cvw,cvh-cropRect.y-cropRect.h);
+  // Gold border
+  ctx.strokeStyle='#F5A623';ctx.lineWidth=2;ctx.strokeRect(cropRect.x,cropRect.y,cropRect.w,cropRect.h);
+  // Handles
+  ctx.fillStyle='#F5A623';
+  const h=HANDLE,cx=cropRect.x+cropRect.w/2,cy=cropRect.y+cropRect.h/2;
+  const pts=[[cropRect.x,cropRect.y],[cx,cropRect.y],[cropRect.x+cropRect.w,cropRect.y],[cropRect.x+cropRect.w,cy],[cropRect.x+cropRect.w,cropRect.y+cropRect.h],[cx,cropRect.y+cropRect.h],[cropRect.x,cropRect.y+cropRect.h],[cropRect.x,cy]];
+  pts.forEach(([px,py])=>{ctx.fillRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(px-h/2,py-h/2,h,h);ctx.strokeStyle='#F5A623';ctx.lineWidth=2});
+}
+function getHandle(x,y){
+  if(!cropRect)return null;
+  const cx=cropRect.x+cropRect.w/2,cy=cropRect.y+cropRect.h/2;
+  const pts={tl:[cropRect.x,cropRect.y],tm:[cx,cropRect.y],tr:[cropRect.x+cropRect.w,cropRect.y],mr:[cropRect.x+cropRect.w,cy],br:[cropRect.x+cropRect.w,cropRect.y+cropRect.h],bm:[cx,cropRect.y+cropRect.h],bl:[cropRect.x,cropRect.y+cropRect.h],ml:[cropRect.x,cy]};
+  for(const[k,[px,py]]of Object.entries(pts))if(Math.abs(x-px)<=HANDLE&&Math.abs(y-py)<=HANDLE)return k;
+  if(x>=cropRect.x&&x<=cropRect.x+cropRect.w&&y>=cropRect.y&&y<=cropRect.y+cropRect.h)return'move';
+  return null;
+}
+function handleResize(handle,dx,dy){
+  const r={...dragOrig};
+  if(handle.includes('l')){r.x=Math.max(0,dragOrig.x+dx);r.w=Math.max(20,dragOrig.w-dx)}
+  if(handle.includes('r')){r.w=Math.max(20,dragOrig.w+dx)}
+  if(handle.includes('t')){r.y=Math.max(0,dragOrig.y+dy);r.h=Math.max(20,dragOrig.h-dy)}
+  if(handle.includes('b')){r.h=Math.max(20,dragOrig.h+dy)}
+  // Clamp to canvas
+  if(r.x+r.w>cvw)r.w=cvw-r.x;if(r.y+r.h>cvh)r.h=cvh-r.y;
+  cropRect=r;redrawCrop();
+}
+function setupCropEvents(){
+  const cv=document.getElementById('cropCanvas');
+  cv.onpointerdown=e=>{
+    const r=cv.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
+    const h=getHandle(x,y);dragStart={x,y};dragOrig=cropRect?{...cropRect}:null;
+    if(h){dragMode=h}else{cropRect=null;dragMode='draw'}
+    if(dragMode==='draw'){cropRect={x,y,w:0,h:0};redrawCrop()}
+    cv.setPointerCapture(e.pointerId);
+  };
+  cv.onpointermove=e=>{
+    if(!dragMode)return;
+    const r=cv.getBoundingClientRect();const x=Math.max(0,Math.min(cvw,e.clientX-r.left)),y=Math.max(0,Math.min(cvh,e.clientY-r.top));
+    const dx=x-dragStart.x,dy=y-dragStart.y;
+    if(dragMode==='draw'){
+      cropRect={x:Math.min(dragStart.x,x),y:Math.min(dragStart.y,y),w:Math.abs(x-dragStart.x),h:Math.abs(y-dragStart.y)};
+    }else if(dragMode==='move'){
+      let nx=dragOrig.x+dx,ny=dragOrig.y+dy;
+      nx=Math.max(0,Math.min(cvw-cropRect.w,nx));ny=Math.max(0,Math.min(cvh-cropRect.h,ny));
+      cropRect={x:nx,y:ny,w:dragOrig.w,h:dragOrig.h};
+    }else{handleResize(dragMode,dx,dy)}
+    redrawCrop();
+  };
+  cv.onpointerup=()=>{if(dragMode==='draw'&&cropRect&&cropRect.w<20)cropRect=null;dragMode=null;dragStart=null;dragOrig=null;redrawCrop()};
+}
+function sendFullImage(){
+  document.getElementById('cropOverlay').classList.remove('open');
+  const outCv=document.createElement('canvas');
+  outCv.width=cropImage.width;outCv.height=cropImage.height;
+  outCv.getContext('2d').drawImage(cropImage,0,0);
+  lastImageDataUrl=outCv.toDataURL('image/jpeg',.85);
+  lastImageOrig=cropImage;
+  addMsg('user',`<img src="${lastImageDataUrl}"><div class="chat-img-label"><span class="badge badge-cam">📷 Photo</span></div>`);
+  analyzePhoto();cropImage=null;
+}
 function cancelCrop(){document.getElementById('cropOverlay').classList.remove('open');cropImage=null;cropRect=null}
-function applyCrop(){const cv=document.getElementById('cropCanvas');document.getElementById('cropOverlay').classList.remove('open');const o=document.createElement('canvas');if(cropRect&&cropRect.w>=20){const sx=cropImage.width/cvw,sy=cropImage.height/cvh;o.width=Math.round(cropRect.w*sx);o.height=Math.round(cropRect.h*sy);o.getContext('2d').drawImage(cropImage,cropRect.x*sx,cropRect.y*sy,o.width,o.height,0,0,o.width,o.height)}else{o.width=cropImage.width;o.height=cropImage.height;o.getContext('2d').drawImage(cropImage,0,0)}lastImageDataUrl=o.toDataURL('image/jpeg',.85);lastImageOrig=cropImage;addMsg('user',`<img src="${lastImageDataUrl}"><div class="chat-img-label"><span class="badge badge-cam">📷 ${cropRect&&cropRect.w<cropImage.width*.9?'Cropped':'Photo'}</span></div>`);analyzePhoto();cropImage=null;cropRect=null}
+function applyCrop(){
+  const cv=document.getElementById('cropCanvas');
+  document.getElementById('cropOverlay').classList.remove('open');
+  const outCv=document.createElement('canvas');
+  if(cropRect&&cropRect.w>=20){
+    const sx=cropImage.width/cvw,sy=cropImage.height/cvh;
+    outCv.width=Math.round(cropRect.w*sx);outCv.height=Math.round(cropRect.h*sy);
+    outCv.getContext('2d').drawImage(cropImage,cropRect.x*sx,cropRect.y*sy,outCv.width,outCv.height,0,0,outCv.width,outCv.height);
+  }else{
+    outCv.width=cropImage.width;outCv.height=cropImage.height;
+    outCv.getContext('2d').drawImage(cropImage,0,0);
+  }
+  lastImageDataUrl=outCv.toDataURL('image/jpeg',.85);
+  lastImageOrig=cropImage;
+  addMsg('user',`<img src="${lastImageDataUrl}"><div class="chat-img-label"><span class="badge badge-cam">📷 ${cropRect&&cropRect.w<cropImage.width*.9?'Cropped':'Photo'}</span></div>`);
+  analyzePhoto();cropImage=null;cropRect=null;
+}
 
-const BACKEND_URL='http://127.0.0.1:8643',BACKEND_KEY='ef0c...fd';
+// Backend URL — change this to your StudyForge backend
+const BACKEND_URL = 'http://127.0.0.1:8643';
+const BACKEND_KEY = 'ef0c...fd';
 
-function analyzePhoto(){const t=document.getElementById('msgInput').value.trim();addMsg('ai',`<span class="badge badge-ai">🔍 Nano Banana 2</span> Generating solution image...`);const ds=document.querySelectorAll('#chat .chat-msg.ai'),dv=ds[ds.length-1];const b=JSON.stringify({image:lastImageDataUrl,text:t});fetch(BACKEND_URL+'/api/studyforge/solve',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':BACKEND_KEY},body:b}).then(r=>r.json()).then(d=>{if(d.image){dv.innerHTML=`<span class="badge badge-ai">✨ Nano Banana 2 — ${d.topic||'Solved'}</span><br><br><img src="${d.image}" style="max-width:100%;border-radius:12px;display:block"><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+renderActions([{t:'🔄 Another',c:()=>analyzePhoto()}])}else if(d.image_url){dv.innerHTML=`<span class="badge badge-ai">✨ Nano Banana 2 — ${d.topic||'Solved'}</span><br><br><img src="${BACKEND_URL}/api/studyforge/proxy-image?url=${encodeURIComponent(d.image_url)}" style="max-width:100%;border-radius:12px;display:block"><br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`}else{dv.innerHTML=`<span class="badge badge-ai">❌ Error</span><br>${d.error||'Generation failed'}`}document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight}).catch(e=>{const p=matchProblem(t);if(p){const u=generateAnswerImageFallback(p);dv.innerHTML=`<span class="badge badge-ai">⚠️ Offline — ${p.topic}</span><br><br><img src="${u}" style="max-width:100%;border-radius:12px;display:block"><br><em style="font-size:11px">Backend unreachable — local fallback</em>`+renderActions([{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>Tips:</strong><br>${p.tips}`)}])}else{dv.innerHTML=`<span class="badge badge-ai">⚠️ Offline</span><br>Backend unreachable and no local match. Type your problem or try again when connected.`}document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight})}
+function analyzePhoto(){
+  const txt=document.getElementById('msgInput').value.trim();
+  // Show analyzing indicator
+  addMsg('ai',`<span class="badge badge-ai">🔍 Nano Banana 2</span> Generating solution image...`);
+  const divs=document.querySelectorAll('#chat .chat-msg.ai'),div=divs[divs.length-1];
 
-function generateAnswerImageFallback(p){const W=800,PD=24,GP=16;const ss=p.s.split('<br><br>').filter(s=>s.includes('<strong>Step'));const st=s=>{const d=document.createElement('div');d.innerHTML=s;return d.textContent||''};const c2=document.createElement('canvas').getContext('2d');c2.font='14px -apple-system,BlinkMacSystemFont,sans-serif';const wr=(t,mw)=>{const ws=t.split(' ');let ln=[],c='';for(const w of ws){const x=c?c+' '+w:w;if(c2.measureText(x).width>mw&&c){ln.push(c);c=w}else{c=x}}if(c)ln.push(c);return ln};const tw=W-PD*2;const pl=wr(st(p.q),tw);const ph=pl.length*22+GP;let sl=[];for(const s of ss){const x=wr(st(s.replace(/<strong>Step \\d+:<\\/strong>\\s*/,'')),tw-32);sl=sl.concat(x)}const sh=ss.length*28+sl.length*22+GP;let ih=0,iy=0;if(lastImageOrig&&lastImageOrig.width){const s=Math.min((W-PD*2)/lastImageOrig.width,360/lastImageOrig.height,1);ih=Math.round(lastImageOrig.height*s);iy=PD}const th=iy+ih+GP+36+GP+ph+GP+sh+GP+24+PD;const cv=document.createElement('canvas');cv.width=W;cv.height=th;const ctx=cv.getContext('2d');ctx.fillStyle='#0F172A';ctx.fillRect(0,0,W,th);if(lastImageOrig&&lastImageOrig.width){const s=Math.min((W-PD*2)/lastImageOrig.width,360/lastImageOrig.height,1);const iw=Math.round(lastImageOrig.width*s),ih2=Math.round(lastImageOrig.height*s),ix=Math.round((W-iw)/2);ctx.fillStyle='#F5A623';ctx.fillRect(ix-2,iy-2,iw+4,ih2+4);ctx.drawImage(lastImageOrig,ix,iy,iw,ih2);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(ix,iy,100,22);ctx.fillStyle='#fff';ctx.font='11px -apple-system,sans-serif';ctx.fillText('📷 Original',ix+8,iy+15)}let y=iy+ih+GP;ctx.fillStyle='#F5A623';ctx.beginPath();ctx.roundRect(PD,y,120,24,12);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 12px -apple-system,sans-serif';ctx.fillText(p.topic,PD+10,y+16);ctx.fillStyle='#FFFFFF';ctx.font='bold 18px -apple-system,sans-serif';ctx.fillText('Step-by-Step Solution',PD+130,y+16);y+=36+GP;ctx.fillStyle='#94A3B8';ctx.font='11px -apple-system,sans-serif';ctx.fillText('PROBLEM',PD,y-4);ctx.fillStyle='#F1F5F9';ctx.font='14px -apple-system,sans-serif';for(const l of wr(st(p.q),tw)){ctx.fillText(l,PD,y+16);y+=22}y+=GP;ctx.fillStyle='#94A3B8';ctx.font='11px -apple-system,sans-serif';ctx.fillText('SOLUTION',PD,y-4);y+=4;let sn=0;for(const s of ss){sn++;ctx.fillStyle='#F5A623';ctx.beginPath();ctx.arc(PD+10,y+16,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 11px -apple-system,sans-serif';ctx.fillText(sn,PD+6.5,y+20);const sx=wr(st(s.replace(/<strong>Step \\d+:<\\/strong>\\s*/,'')),tw-32);ctx.fillStyle='#E2E8F0';ctx.font='14px -apple-system,sans-serif';for(const l of sx){ctx.fillText(l,PD+28,y+20);y+=22}y+=8}y+=GP;ctx.fillStyle='#475569';ctx.font='11px -apple-system,sans-serif';ctx.fillText('Offline fallback — connect backend for Nano Banana 2',PD,y);return cv.toDataURL('image/png')}
+  // Call the real backend
+  const body=JSON.stringify({image:lastImageDataUrl,text:txt});
+  fetch(BACKEND_URL+'/api/studyforge/solve',{
+    method:'POST',headers:{'Content-Type':'application/json','X-API-Key':BACKEND_KEY},body
+  }).then(r=>r.json()).then(data=>{
+    if(data.image){
+      div.innerHTML=`<span class="badge badge-ai">✨ Nano Banana 2 — ${data.topic||'Solved'}</span><br><br>
+        <img src="${data.image}" style="max-width:100%;border-radius:12px;display:block" alt="Nano Banana 2 solution">
+        <br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`+
+        renderActions([{t:'🔄 Another',c:()=>analyzePhoto()}]);
+    }else if(data.image_url){
+      div.innerHTML=`<span class="badge badge-ai">✨ Nano Banana 2 — ${data.topic||'Solved'}</span><br><br>
+        <img src="${BACKEND_URL}/api/studyforge/proxy-image?url=${encodeURIComponent(data.image_url)}" style="max-width:100%;border-radius:12px;display:block" alt="Nano Banana 2 solution">
+        <br><em style="font-size:11px">Powered by Nano Banana 2 — Higgsfield AI</em>`;
+    }else{
+      div.innerHTML=`<span class="badge badge-ai">❌ Error</span><br>${data.error||'Generation failed'}`;
+    }
+    document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight;
+  }).catch(e=>{
+    // Fallback: backend unreachable, use local matching + Canvas composite
+    const p=matchProblem(txt);
+    if(p){
+      const imgUrl=generateAnswerImageFallback(p);
+      div.innerHTML=`<span class="badge badge-ai">⚠️ Offline — ${p.topic}</span><br><br>
+        <img src="${imgUrl}" style="max-width:100%;border-radius:12px;display:block" alt="Solution">
+        <br><em style="font-size:11px">Backend unreachable — local fallback</em>`+
+        renderActions([{t:'📖 Full explainer',c:()=>openExplainer(p),cls:'accent'},{t:'💡 Tips',c:()=>addMsg('ai',`<strong>Tips:</strong><br>${p.tips}`)}]);
+    }else{
+      div.innerHTML=`<span class="badge badge-ai">⚠️ Offline</span><br>Backend unreachable and no local match. Type your problem or try again when connected.`;
+    }
+    document.getElementById('chat').scrollTop=document.getElementById('chat').scrollHeight;
+  });
+}
 
-function openExplainer(p){expSlides=buildSlides(p);expIdx=0;document.getElementById('expTitle').textContent=p.topic;document.getElementById('expBadge').textContent='Nano Banana 2';renderExpSlide();document.getElementById('explainer').classList.add('open')}
+// Fallback Canvas compositor (used when backend is unreachable)
+function generateAnswerImageFallback(p){
+  const W=800, PAD=24, GAP=16;
+  const steps=p.s.split('<br><br>').filter(s=>s.includes('<strong>Step'));
+  const strip=s=>{const d=document.createElement('div');d.innerHTML=s;return d.textContent||''};
+  const ctx2=document.createElement('canvas').getContext('2d');
+  ctx2.font='14px -apple-system,BlinkMacSystemFont,sans-serif';
+  const wrap=(txt,maxW)=>{const ws=txt.split(' ');let lines=[],cur='';for(const w of ws){const t=cur?cur+' '+w:w;if(ctx2.measureText(t).width>maxW&&cur){lines.push(cur);cur=w}else{cur=t}}if(cur)lines.push(cur);return lines};
+  const txtW=W-PAD*2;
+  const probLines=wrap(strip(p.q),txtW);
+  const probH=probLines.length*22+GAP;
+  let stepLines=[];
+  for(const s of steps){const sl=wrap(strip(s.replace(/<strong>Step \\d+:<\\/strong>\\s*/,'')),txtW-32);stepLines=stepLines.concat(sl)}
+  const stepH=steps.length*28+stepLines.length*22+GAP;
+  let imgH=0,imgY=0;
+  if(lastImageOrig&&lastImageOrig.width){const s=Math.min((W-PAD*2)/lastImageOrig.width,360/lastImageOrig.height,1);imgH=Math.round(lastImageOrig.height*s);imgY=PAD}
+  const totalH=imgY+imgH+GAP+36+GAP+probH+GAP+stepH+GAP+24+PAD;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=totalH;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#0F172A';ctx.fillRect(0,0,W,totalH);
+  if(lastImageOrig&&lastImageOrig.width){const s=Math.min((W-PAD*2)/lastImageOrig.width,360/lastImageOrig.height,1);const iw=Math.round(lastImageOrig.width*s),ih=Math.round(lastImageOrig.height*s),ix=Math.round((W-iw)/2);ctx.fillStyle='#F5A623';ctx.fillRect(ix-2,imgY-2,iw+4,ih+4);ctx.drawImage(lastImageOrig,ix,imgY,iw,ih);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(ix,imgY,100,22);ctx.fillStyle='#fff';ctx.font='11px -apple-system,sans-serif';ctx.fillText('📷 Original',ix+8,imgY+15)}
+  let y=imgY+imgH+GAP;
+  ctx.fillStyle='#F5A623';ctx.beginPath();ctx.roundRect(PAD,y,120,24,12);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 12px -apple-system,sans-serif';ctx.fillText(p.topic,PAD+10,y+16);
+  ctx.fillStyle='#FFFFFF';ctx.font='bold 18px -apple-system,sans-serif';ctx.fillText('Step-by-Step Solution',PAD+130,y+16);
+  y+=36+GAP;
+  ctx.fillStyle='#94A3B8';ctx.font='11px -apple-system,sans-serif';ctx.fillText('PROBLEM',PAD,y-4);
+  ctx.fillStyle='#F1F5F9';ctx.font='14px -apple-system,sans-serif';
+  for(const l of wrap(strip(p.q),txtW)){ctx.fillText(l,PAD,y+16);y+=22}
+  y+=GAP;
+  ctx.fillStyle='#94A3B8';ctx.font='11px -apple-system,sans-serif';ctx.fillText('SOLUTION',PAD,y-4);y+=4;
+  let stepNum=0;
+  for(const st of steps){stepNum++;ctx.fillStyle='#F5A623';ctx.beginPath();ctx.arc(PAD+10,y+16,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 11px -apple-system,sans-serif';ctx.fillText(stepNum,PAD+6.5,y+20);const sl=wrap(strip(st.replace(/<strong>Step \\d+:<\\/strong>\\s*/,'')),txtW-32);ctx.fillStyle='#E2E8F0';ctx.font='14px -apple-system,sans-serif';for(const l of sl){ctx.fillText(l,PAD+28,y+20);y+=22}y+=8}
+  y+=GAP;
+  ctx.fillStyle='#475569';ctx.font='11px -apple-system,sans-serif';ctx.fillText('Offline fallback — connect backend for Nano Banana 2',PAD,y);
+  return cv.toDataURL('image/png');
+}
+
+// ════════════ EXPLAINER ════════════
+function openExplainer(p){
+  expSlides=buildSlides(p);expIdx=0;
+  document.getElementById('expTitle').textContent=p.topic;
+  document.getElementById('expBadge').textContent='Nano Banana 2';
+  renderExpSlide();document.getElementById('explainer').classList.add('open');
+}
 function closeExplainer(){document.getElementById('explainer').classList.remove('open')}
 function expSlide(d){expIdx=Math.max(0,Math.min(expSlides.length-1,expIdx+d));renderExpSlide()}
-function renderExpSlide(){document.getElementById('expBody').innerHTML=expSlides[expIdx]||'';document.getElementById('expPrev').style.visibility=expIdx===0?'hidden':'';document.getElementById('expNext').style.visibility=expIdx===expSlides.length-1?'hidden':'';document.getElementById('expNext').textContent=expIdx===expSlides.length-1?'Done':'Next →';document.getElementById('expNext').onclick=expIdx===expSlides.length-1?closeExplainer:()=>expSlide(1);document.getElementById('expDots').innerHTML=expSlides.map((_,i)=>`<div class="exp-dot${i===expIdx?' active':''}" onclick="expIdx=${i};renderExpSlide()"></div>`).join('')}
-function buildSlides(p){const ss=p.s.split('<br><br>').filter(s=>s.includes('<strong>Step'));return[`<h3>📋 Problem</h3><p><strong>Topic:</strong> ${p.topic}</p><p><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code></p><p>Let's work through this systematically.</p>`,`<h3>🧠 Strategy</h3><p>Here's the approach:</p><div class="tip-card"><p>${p.tips.split('<br>')[0]}</p></div><p>We'll break it down into ${ss.length} clear steps.</p>`,`<h3>🔢 Step-by-Step Solution</h3><div class="solution-block">${ss.map((st,i)=>`<div class="step"><div class="step-num">${i+1}</div><div>${st.replace(/<strong>Step \\d+:<\\/strong>\\s*/,'')}</div></div>`).join('')}</div><p style="font-size:12px;color:var(--text3)">Generated by Nano Banana 2 — Higgsfield AI</p>`,`<h3>💡 Tips</h3>${p.tips.split('<br>').filter(Boolean).map(t=>`<div class="tip-card"><p>${t.replace(/^[•\\-]\\s*/,'')}</p></div>`).join('')}`,`<h3>🎯 Practice</h3><p>Try a similar problem on your own. Need another? Just ask in the chat.</p><p>Want me to check your work on this problem type? Send me your answer!</p>`]}
+function renderExpSlide(){
+  document.getElementById('expBody').innerHTML=expSlides[expIdx]||'';
+  document.getElementById('expPrev').style.visibility=expIdx===0?'hidden':'';
+  document.getElementById('expNext').style.visibility=expIdx===expSlides.length-1?'hidden':'';
+  document.getElementById('expNext').textContent=expIdx===expSlides.length-1?'Done':'Next →';
+  document.getElementById('expNext').onclick=expIdx===expSlides.length-1?closeExplainer:()=>expSlide(1);
+  document.getElementById('expDots').innerHTML=expSlides.map((_,i)=>`<div class="exp-dot${i===expIdx?' active':''}" onclick="expIdx=${i};renderExpSlide()"></div>`).join('');
+}
+function buildSlides(p){
+  const steps=p.s.split('<br><br>').filter(s=>s.includes('<strong>Step'));
+  return [
+    `<h3>📋 Problem</h3><p><strong>Topic:</strong> ${p.topic}</p><p><strong>Problem:</strong> <code>${escapeHtml(p.q)}</code></p><p>Let's work through this systematically.</p>`,
+    `<h3>🧠 Strategy</h3><p>Here's the approach:</p><div class="tip-card"><p>${p.tips.split('<br>')[0]}</p></div><p>We'll break it down into ${steps.length} clear steps.</p>`,
+    `<h3>🔢 Step-by-Step Solution</h3><div class="solution-block">${steps.map((st,i)=>`<div class="step"><div class="step-num">${i+1}</div><div>${st.replace(/<strong>Step \d+:<\/strong>\s*/,'')}</div></div>`).join('')}</div><p style="font-size:12px;color:var(--text3)">Generated by Nano Banana 2 — Higgsfield AI</p>`,
+    `<h3>💡 Tips</h3>${p.tips.split('<br>').filter(Boolean).map(t=>`<div class="tip-card"><p>${t.replace(/^[•\-]\s*/,'')}</p></div>`).join('')}`,
+    `<h3>🎯 Practice</h3><p>Try a similar problem on your own. Need another? Just ask in the chat.</p><p>Want me to check your work on this problem type? Send me your answer!</p>`
+  ];
+}
 renderSubjects();
 </script>
 </body>
