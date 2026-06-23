@@ -135,7 +135,7 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);height:100dv
   <div class="input-bar">
     <input type="file" id="fileInput" accept="image/*" onchange="pickImage(this)">
     <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Upload from gallery">📎</button>
-    <button class="cam-btn" onclick="openCamera()" title="Take photo">📷</button>
+    <button class="cam-btn" onclick="document.getElementById('fileInput').click()" title="Take photo">📷</button>
     <input type="text" id="msgInput" placeholder="Type a math problem..." onkeydown="if(event.key==='Enter')send()">
     <button class="send-btn" onclick="send()">➤</button>
   </div>
