@@ -338,15 +338,16 @@ const HANDLE=10;
 async function openCamera(){
   try{
     cameraFacing='environment';
-    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},audio:false});
     const v=document.getElementById('cameraVideo');v.srcObject=cameraStream;
+    await v.play();
     document.getElementById('cameraOverlay').classList.add('open');
   }catch(e){
-    // Fallback: try front camera or any camera
     try{
       cameraFacing='user';
-      cameraStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+      cameraStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1920},height:{ideal:1080}},audio:false});
       const v=document.getElementById('cameraVideo');v.srcObject=cameraStream;
+      await v.play();
       document.getElementById('cameraOverlay').classList.add('open');
     }catch(e2){
       alert('Camera not available. Use the 📎 upload button instead.');
@@ -358,7 +359,7 @@ async function swapCamera(){
   cameraStream.getTracks().forEach(t=>t.stop());
   cameraFacing=cameraFacing==='environment'?'user':'environment';
   try{
-    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:cameraFacing},audio:false});
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:cameraFacing,width:{ideal:1920},height:{ideal:1080}},audio:false});
     document.getElementById('cameraVideo').srcObject=cameraStream;
   }catch(e){}
 }
@@ -367,22 +368,39 @@ function closeCamera(){
   document.getElementById('cameraOverlay').classList.remove('open');
 }
 function captureFrame(){
-  const v=document.getElementById('cameraVideo');
-  const cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;
-  cv.getContext('2d').drawImage(v,0,0);
-  const dataUrl=cv.toDataURL('image/jpeg',.85);
-  closeCamera();
-  // Create Image from data URL and feed into crop flow
-  const img=new Image();img.onload=()=>{cropImage=img;initCrop()};img.src=dataUrl;
+  try{
+    const v=document.getElementById('cameraVideo');
+    if(!v.videoWidth||v.videoWidth===0){alert('Camera not ready. Try again.');return}
+    const cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;
+    cv.getContext('2d').drawImage(v,0,0);
+    const dataUrl=cv.toDataURL('image/jpeg',.85);
+    // Don't close camera until frame is captured
+    const img=new Image();
+    img.onload=()=>{
+      closeCamera();
+      cropImage=img;initCrop();
+    };
+    img.onerror=()=>{closeCamera();alert('Failed to process photo. Try again.');};
+    img.src=dataUrl;
+  }catch(e){alert('Camera error: '+e.message);}
 }
 
 function pickImage(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const img=new Image();img.onload=()=>{cropImage=img;initCrop()};img.src=reader.result;
-  };
-  reader.readAsDataURL(file);input.value='';
+  try{
+    const file=input.files[0];if(!file)return;
+    if(file.size>50*1024*1024){alert('Image too large. Max 50MB.');return}
+    const reader=new FileReader();
+    reader.onerror=()=>{alert('Failed to read image file.');};
+    reader.onload=()=>{
+      try{
+        const img=new Image();
+        img.onload=()=>{cropImage=img;initCrop()};
+        img.onerror=()=>{alert('Failed to load image. Try a different photo.');};
+        img.src=reader.result;
+      }catch(e){alert('Image error: '+e.message);}
+    };
+    reader.readAsDataURL(file);input.value='';
+  }catch(e){alert('Upload error: '+e.message);}
 }
 function initCrop(){
   const ov=document.getElementById('cropOverlay'),cv=document.getElementById('cropCanvas');
